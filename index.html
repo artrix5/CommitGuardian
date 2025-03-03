@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Git Commit Risk Analyzer - AI Powered</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="prism-custom-theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/components/prism-core.min.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/plugins/autoloader/prism-autoloader.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Git Commit Risk Analyzer</h1>
+
+        <div class="demo-banner">
+            AI-POWERED MODE - Analyze commit risk with machine learning
+        </div>
+
+        <div class="main-content">
+            <div class="analysis-section">
+                <div class="input-section">
+                    <h3>Enter Commit Hash</h3>
+                    <div class="form-group">
+                        <label for="commitHashInput">Commit Hash:</label>
+                        <input type="text" id="commitHashInput" placeholder="e.g., a7c31fd92">
+                    </div>
+                    <button id="analyzeBtn" class="btn btn-primary">Analyze Commit</button>
+                </div>
+
+                <div class="separator">
+                    <span>OR</span>
+                </div>
+
+                <div class="sample-section">
+                    <h3>Try Sample Commits</h3>
+                    <div class="sample-buttons">
+                        <button id="commit1Btn" class="btn">Small Commit (a7c31fd92)</button>
+                        <button id="commit2Btn" class="btn">Medium Commit (b8d45e720)</button>
+                        <button id="commit3Btn" class="btn">Large Commit (c9f67a195)</button>
+                    </div>
+                </div>
+
+                <div id="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing commit with AI model...</p>
+                </div>
+
+                <div id="results" class="results">
+                    <h2>Analysis Results</h2>
+                    <div class="commit-info">
+                        <p id="repoName" class="repo-name">Repository: Unknown</p>
+                        <p id="commitHash" class="commit-hash"></p>
+                        <p id="commitMessage" class="commit-message"></p>
+                        <p id="commitAuthor" class="commit-author"></p>
+                        <p id="commitDate" class="commit-date"></p>
+                    </div>
+
+                    <div class="risk-indicator">
+                        <div id="riskScore" class="risk-score">0.0</div>
+                        <div id="riskLabel" class="risk-label risk-low">Low Risk</div>
+                        <button class="info-button" type="button">
+                            <span>i</span>
+                            <div class="tooltip">
+                                <h4>AI Risk Assessment</h4>
+                                <p><strong>Low Risk (0-39):</strong> Small, focused changes with minimal impact.</p>
+                                <p><strong>Medium Risk (40-69):</strong> Moderate changes that warrant careful review.
+                                </p>
+                                <p><strong>High Risk (70-100):</strong> Large changes with higher potential for issues.
+                                </p>
+                                <p>Our Azure ML model considers: lines changed, number of files, day/time of commit,
+                                    unresolved comments, previous TRs, patchsets, and reviewers.</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Files Changed</div>
+                            <div id="filesChanged" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Insertions</div>
+                            <div id="insertions" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Deletions</div>
+                            <div id="deletions" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Total Changes</div>
+                            <div id="totalChanges" class="stat-value">0</div>
+                        </div>
+                    </div>
+
+                    <!-- New stats for ML features -->
+                    <div class="stats ml-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Reviewers</div>
+                            <div id="reviewersCount" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Patchsets</div>
+                            <div id="patchsetsCount" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Unresolved Comments</div>
+                            <div id="unresolvedComments" class="stat-value">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Time of Day</div>
+                            <div id="timeOfDay" class="stat-value">
+                                <script>document.write(new Date().getHours() + ':00')</script>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="files-section">
+                        <h3>Changed Files</h3>
+                        <div id="filesList" class="files-list"></div>
+
+                        <div class="code-preview" id="codePreview">
+                            <pre><code id="codeSnippet" class="language-cpp"></code></pre>
+                        </div>
+                    </div>
+
+                    <!-- Moved the recommendations section below the files section -->
+                    <div class="recommendations">
+                        <h3>AI Recommendations</h3>
+                        <ul id="recommendationList" class="recommendation-list">
+                            <li>No recommendations available.</li>
+                        </ul>
+                    </div>
+
+                    <div class="model-info">
+                        <h3>Model Information</h3>
+                        <div class="model-details">
+                            <div class="model-detail-item">
+                                <span class="detail-label">Model:</span>
+                                <span class="detail-value">Azure ML Commit Risk Predictor</span>
+                            </div>
+                            <div class="model-detail-item">
+                                <span class="detail-label">Features:</span>
+                                <span class="detail-value">Code changes, files, timing, comments, TRs, reviewers</span>
+                            </div>
+                            <div class="model-detail-item">
+                                <span class="detail-label">Last Training:</span>
+                                <span class="detail-value">March 1, 2025</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TR section - initially hidden -->
+            <div id="trSection" class="tr-section" style="display: none;">
+                <h2>Troubleshooting Reports</h2>
+                <div class="tr-filters">
+                    <div class="tr-filter-repo">
+                        <span>Repository:</span>
+                        <span id="trRepoName">None selected</span>
+                    </div>
+                    <div class="tr-filter-year">
+                        <span>Year:</span>
+                        <select id="trYearFilter">
+                            <option value="2025">2025 only</option>
+                            <option value="2024">2024 only</option>
+                            <option value="all" selected>All years</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="trList" class="tr-list">
+                    <div class="tr-empty-state">
+                        Select a repository to view related TRs
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="commit-risk-predictor.js"></script>
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
