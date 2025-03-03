@@ -1,0 +1,238 @@
+{
+    "commits": [
+      {
+        "commit_id": "a7c31fd92",
+        "commit_message_length": 58,
+        "repository": "frontend-app",
+        "lines_added": 15,
+        "lines_removed": 7,
+        "files_changed": 2,
+        "commit_timestamp": "2025-03-01T14:23:45Z",
+        "commit_hour": 14,
+        "is_friday": 0,
+        "is_weekend": 0,
+        "after_hours": 0,
+        "unresolved_comments": 0,
+        "reviewers_count": 2,
+        "patchsets_count": 1,
+        "repo_trs_count": 3,
+        "unresolved_trs_count": 1,
+        "critical_trs_count": 0,
+        "build_failed": 0,
+        "programming_language": "JavaScript",
+        "has_manual_memory_allocation": 0,
+        "are_multiple_programming_languages_present": 1,
+        "files": [
+          {
+            "filename": "src/components/Navbar.js",
+            "language": "JavaScript",
+            "changes": 20,
+            "code": "import React, { useState, useEffect } from 'react';\n\nconst Navbar = () => {\n  const [isMobile, setIsMobile] = useState(false);\n  const [menuOpen, setMenuOpen] = useState(false);\n  \n  useEffect(() => {\n    const handleResize = () => {\n      setIsMobile(window.innerWidth < 768);\n    };\n    \n    window.addEventListener('resize', handleResize);\n    handleResize(); // Initialize on mount\n    \n    return () => window.removeEventListener('resize', handleResize);\n  }, []);\n\n  const toggleMenu = () => {\n    setMenuOpen(!menuOpen);\n  };\n\n  return (\n    <nav className=\"navbar\">\n      <div className=\"navbar-container\">\n        <div className=\"navbar-logo\">Logo</div>\n        \n        {isMobile ? (\n          <div className=\"navbar-mobile\">\n            <button className=\"menu-toggle\" onClick={toggleMenu}>\n              {menuOpen ? 'Close' : 'Menu'}\n            </button>\n            {menuOpen && (\n              <div className=\"navbar-links mobile-open\">\n                <a href=\"/\">Home</a>\n                <a href=\"/about\">About</a>\n                <a href=\"/services\">Services</a>\n                <a href=\"/contact\">Contact</a>\n              </div>\n            )}\n          </div>\n        ) : (\n          <div className=\"navbar-links\">\n            <a href=\"/\">Home</a>\n            <a href=\"/about\">About</a>\n            <a href=\"/services\">Services</a>\n            <a href=\"/contact\">Contact</a>\n          </div>\n        )}\n      </div>\n    </nav>\n  );\n};\n\nexport default Navbar;"
+          },
+          {
+            "filename": "src/styles/navbar.css",
+            "language": "CSS",
+            "changes": 12,
+            "code": ".navbar {\n  width: 100%;\n  background-color: #333;\n  color: white;\n}\n\n.navbar-container {\n  display: flex;\n  justify-content: space-between;\n  align-items: center;\n  padding: 1rem 2rem;\n  max-width: 1200px;\n  margin: 0 auto;\n}\n\n.navbar-logo {\n  font-size: 1.5rem;\n  font-weight: bold;\n}\n\n.navbar-links {\n  display: flex;\n  gap: 1.5rem;\n}\n\n.navbar-links a {\n  color: white;\n  text-decoration: none;\n}\n\n.navbar-links a:hover {\n  text-decoration: underline;\n}\n\n.navbar-mobile {\n  display: flex;\n  flex-direction: column;\n  align-items: flex-end;\n}\n\n.menu-toggle {\n  background: none;\n  border: 1px solid white;\n  color: white;\n  padding: 0.5rem 1rem;\n  cursor: pointer;\n}\n\n/* Mobile styles */\n@media (max-width: 768px) {\n  .navbar-links {\n    display: none;\n  }\n  \n  .navbar-links.mobile-open {\n    display: flex;\n    flex-direction: column;\n    width: 100%;\n    margin-top: 1rem;\n    gap: 1rem;\n  }\n}"
+          }
+        ],
+        "author": "Jane Smith <jsmith@example.com>",
+        "message": "Fix navbar responsiveness on mobile devices"
+      },
+      {
+        "commit_id": "f7b1c4e82",
+        "commit_message_length": 75,
+        "repository": "backend-service",
+        "lines_added": 12,
+        "lines_removed": 8,
+        "files_changed": 1,
+        "commit_timestamp": "2025-03-05T10:20:33Z",
+        "commit_hour": 10,
+        "is_friday": 0,
+        "is_weekend": 0,
+        "after_hours": 0,
+        "unresolved_comments": 0,
+        "reviewers_count": 2,
+        "patchsets_count": 1,
+        "repo_trs_count": 5,
+        "unresolved_trs_count": 2,
+        "critical_trs_count": 0,
+        "build_failed": 0,
+        "programming_language": "JavaScript",
+        "has_manual_memory_allocation": 0,
+        "are_multiple_programming_languages_present": 0,
+        "files": [
+          {
+            "filename": "src/config/constants.js",
+            "language": "JavaScript",
+            "changes": 20,
+            "code": "/**\n * System-wide configuration constants\n */\n\n// API rate limits per endpoint (requests per minute)\nexport const RATE_LIMITS = {\n  // User endpoints\n  'GET /api/users': 60,\n  'GET /api/users/:id': 100,\n  'POST /api/users': 20,\n  'PUT /api/users/:id': 30,\n  \n  // Content endpoints\n  'GET /api/content': 200,\n  'GET /api/content/:id': 300,\n  'POST /api/content': 40,\n  'PUT /api/content/:id': 40,\n  'DELETE /api/content/:id': 20,\n  \n  // Search endpoints (more restricted to prevent heavy loads)\n  'GET /api/search': 50,\n  \n  // Defaults\n  'DEFAULT': 100\n};\n\n// Timeouts in milliseconds\nexport const TIMEOUTS = {\n  DEFAULT_REQUEST: 30000,   // 30 seconds\n  DATABASE_QUERY: 10000,    // 10 seconds\n  CACHE_QUERY: 500,         // 500 milliseconds\n  EXTERNAL_API: 20000,      // 20 seconds\n  HEALTH_CHECK: 5000        // 5 seconds\n};\n\n// Cache durations in seconds\nexport const CACHE_DURATIONS = {\n  USER_PROFILE: 300,        // 5 minutes\n  CONTENT_ITEM: 600,        // 10 minutes\n  SEARCH_RESULTS: 60,       // 1 minute\n  CONFIGURATION: 3600,      // 1 hour\n  API_RESPONSE: 120         // 2 minutes\n};\n\n// Error codes and messages\nexport const ERROR_CODES = {\n  UNAUTHORIZED: {\n    code: 'ERR_AUTH',\n    message: 'Unauthorized access'\n  },\n  RATE_LIMITED: {\n    code: 'ERR_RATE',\n    message: 'Rate limit exceeded'\n  },\n  VALIDATION: {\n    code: 'ERR_VALID',\n    message: 'Validation failed'\n  },\n  NOT_FOUND: {\n    code: 'ERR_NOTFOUND',\n    message: 'Resource not found'\n  },\n  SERVER_ERROR: {\n    code: 'ERR_SERVER',\n    message: 'Internal server error'\n  }\n};"
+          }
+        ],
+        "author": "Sarah Chen <schen@example.com>",
+        "message": "Update API rate limits and connection timeout settings based on production metrics"
+      },
+      {
+        "commit_id": "b8d45e720",
+        "commit_message_length": 42,
+        "repository": "backend-service",
+        "lines_added": 124,
+        "lines_removed": 18,
+        "files_changed": 3,
+        "commit_timestamp": "2025-02-28T09:15:22Z",
+        "commit_hour": 9,
+        "is_friday": 1,
+        "is_weekend": 0,
+        "after_hours": 0,
+        "unresolved_comments": 2,
+        "reviewers_count": 1,
+        "patchsets_count": 3,
+        "repo_trs_count": 5,
+        "unresolved_trs_count": 2,
+        "critical_trs_count": 1,
+        "build_failed": 0,
+        "programming_language": "JavaScript",
+        "has_manual_memory_allocation": 0,
+        "are_multiple_programming_languages_present": 0,
+        "files": [
+          {
+            "filename": "src/services/cache.js",
+            "language": "JavaScript",
+            "changes": 87,
+            "code": "/**\n * Cache service for database query results\n * Implements TTL-based caching with memory optimizations\n */\nclass QueryCache {\n  constructor(ttlSeconds = 300) {\n    this.cache = new Map();\n    this.ttlSeconds = ttlSeconds;\n    this.stats = {\n      hits: 0,\n      misses: 0,\n      evictions: 0\n    };\n    \n    // Start automatic cleanup interval\n    this.cleanupInterval = setInterval(() => {\n      this.cleanup();\n    }, 60000); // Run cleanup every minute\n  }\n  \n  /**\n   * Get an item from the cache\n   * @param {string} key - Cache key\n   * @returns {any|null} - Cached value or null if not found/expired\n   */\n  get(key) {\n    const item = this.cache.get(key);\n    if (!item) {\n      this.stats.misses++;\n      return null;\n    }\n    \n    const now = Date.now();\n    if (now > item.expiry) {\n      this.cache.delete(key);\n      this.stats.evictions++;\n      this.stats.misses++;\n      return null;\n    }\n    \n    this.stats.hits++;\n    return item.value;\n  }\n  \n  /**\n   * Set an item in the cache\n   * @param {string} key - Cache key\n   * @param {any} value - Value to cache\n   * @param {number} ttlSeconds - Optional custom TTL in seconds\n   */\n  set(key, value, ttlSeconds = this.ttlSeconds) {\n    const expiry = Date.now() + (ttlSeconds * 1000);\n    this.cache.set(key, { value, expiry });\n  }\n  \n  /**\n   * Invalidate a specific cache entry\n   * @param {string} key - Cache key to invalidate\n   */\n  invalidate(key) {\n    this.cache.delete(key);\n  }\n  \n  /**\n   * Invalidate all cache entries matching a pattern\n   * @param {RegExp} pattern - Regular expression to match keys\n   */\n  invalidatePattern(pattern) {\n    for (const key of this.cache.keys()) {\n      if (pattern.test(key)) {\n        this.cache.delete(key);\n      }\n    }\n  }\n  \n  /**\n   * Clear the entire cache\n   */\n  clear() {\n    this.cache.clear();\n    this.stats = { hits: 0, misses: 0, evictions: 0 };\n  }\n  \n  /**\n   * Clean up expired items\n   */\n  cleanup() {\n    const now = Date.now();\n    let expiredCount = 0;\n    \n    for (const [key, item] of this.cache.entries()) {\n      if (now > item.expiry) {\n        this.cache.delete(key);\n        expiredCount++;\n        this.stats.evictions++;\n      }\n    }\n    \n    console.log(`Cache cleanup: removed ${expiredCount} expired items. Current size: ${this.cache.size}`);\n  }\n  \n  /**\n   * Get cache statistics\n   */\n  getStats() {\n    return {\n      ...this.stats,\n      size: this.cache.size,\n      hitRate: this.stats.hits / (this.stats.hits + this.stats.misses) || 0\n    };\n  }\n  \n  /**\n   * Stop cleanup interval on service shutdown\n   */\n  shutdown() {\n    if (this.cleanupInterval) {\n      clearInterval(this.cleanupInterval);\n    }\n  }\n}\n\n// Export singleton instance\nconst cacheInstance = new QueryCache();\nexport default cacheInstance;"
+          },
+          {
+            "filename": "src/database/query.js",
+            "language": "JavaScript",
+            "changes": 42,
+            "code": "import { pool } from './connection';\nimport cache from '../services/cache';\nimport logger from '../utils/logger';\n\n/**\n * Execute a database query with optional caching\n * @param {string} sql - SQL query string\n * @param {Array} params - Query parameters\n * @param {Object} options - Query options\n * @returns {Promise<any>} - Query results\n */\nasync function executeQuery(sql, params = [], options = {}) {\n  const { \n    useCache = true, \n    cacheTtl = 300,\n    cacheKey = null,\n    forceRefresh = false\n  } = options;\n  \n  // Generate cache key if not provided\n  const queryKey = cacheKey || `query:${sql}:${JSON.stringify(params)}`;\n  \n  // Try to get from cache first\n  if (useCache && !forceRefresh) {\n    const cachedResult = cache.get(queryKey);\n    if (cachedResult) {\n      logger.debug(`Cache hit for query: ${queryKey.substring(0, 50)}...`);\n      return cachedResult;\n    }\n  }\n  \n  // Execute database query\n  try {\n    const client = await pool.connect();\n    try {\n      const start = Date.now();\n      const result = await client.query(sql, params);\n      const duration = Date.now() - start;\n      \n      logger.debug(`Query executed in ${duration}ms: ${sql.substring(0, 50)}...`);\n      \n      // Store in cache if enabled\n      if (useCache) {\n        cache.set(queryKey, result.rows, cacheTtl);\n      }\n      \n      return result.rows;\n    } finally {\n      client.release();\n    }\n  } catch (error) {\n    logger.error(`Database query error: ${error.message}`, { sql, params });\n    throw error;\n  }\n}\n\n/**\n * Execute a transaction with multiple queries\n * @param {Function} callback - Transaction callback\n * @returns {Promise<any>} - Transaction result\n */\nasync function executeTransaction(callback) {\n  const client = await pool.connect();\n  try {\n    await client.query('BEGIN');\n    \n    const result = await callback(client);\n    \n    await client.query('COMMIT');\n    return result;\n  } catch (error) {\n    await client.query('ROLLBACK');\n    logger.error(`Transaction error: ${error.message}`);\n    throw error;\n  } finally {\n    client.release();\n  }\n}\n\nexport { executeQuery, executeTransaction };"
+          },
+          {
+            "filename": "tests/services/cache.test.js",
+            "language": "JavaScript",
+            "changes": 13,
+            "code": "import cache from '../../src/services/cache';\n\ndescribe('QueryCache', () => {\n  beforeEach(() => {\n    cache.clear();\n    jest.useFakeTimers();\n  });\n  \n  afterEach(() => {\n    jest.useRealTimers();\n  });\n  \n  test('should store and retrieve values', () => {\n    cache.set('test-key', { data: 'test-value' });\n    expect(cache.get('test-key')).toEqual({ data: 'test-value' });\n  });\n  \n  test('should return null for missing keys', () => {\n    expect(cache.get('non-existent')).toBeNull();\n  });\n  \n  test('should expire items after TTL', () => {\n    cache.set('expiring-key', 'value', 10); // 10 seconds TTL\n    \n    // Should be available immediately\n    expect(cache.get('expiring-key')).toBe('value');\n    \n    // Advance time by 11 seconds\n    jest.advanceTimersByTime(11000);\n    \n    // Should be expired now\n    expect(cache.get('expiring-key')).toBeNull();\n  });\n  \n  test('should invalidate specific keys', () => {\n    cache.set('key1', 'value1');\n    cache.set('key2', 'value2');\n    \n    cache.invalidate('key1');\n    \n    expect(cache.get('key1')).toBeNull();\n    expect(cache.get('key2')).toBe('value2');\n  });\n  \n  test('should clean up expired items on interval', () => {\n    cache.set('key1', 'value1', 5); // 5 seconds TTL\n    cache.set('key2', 'value2', 60); // 60 seconds TTL\n    \n    // Advance time by 10 seconds\n    jest.advanceTimersByTime(10000);\n    \n    // Trigger cleanup\n    cache.cleanup();\n    \n    expect(cache.get('key1')).toBeNull();\n    expect(cache.get('key2')).toBe('value2');\n  });\n});"
+          }
+        ],
+        "author": "Alex Johnson <ajohnson@example.com>",
+        "message": "Implement caching layer for database queries"
+      },
+      {
+        "commit_id": "d2e5f8b37",
+        "commit_message_length": 62,
+        "repository": "authentication",
+        "lines_added": 45,
+        "lines_removed": 12,
+        "files_changed": 1,
+        "commit_timestamp": "2025-03-02T11:30:18Z",
+        "commit_hour": 11,
+        "is_friday": 0,
+        "is_weekend": 1,
+        "after_hours": 0,
+        "unresolved_comments": 0,
+        "reviewers_count": 1,
+        "patchsets_count": 2,
+        "repo_trs_count": 4,
+        "unresolved_trs_count": 1,
+        "critical_trs_count": 0,
+        "build_failed": 0,
+        "programming_language": "Java",
+        "has_manual_memory_allocation": 0,
+        "are_multiple_programming_languages_present": 0,
+        "files": [
+          {
+            "filename": "src/main/java/com/example/auth/TokenValidator.java",
+            "language": "Java",
+            "changes": 57,
+            "code": "package com.example.auth;\n\nimport io.jsonwebtoken.Claims;\nimport io.jsonwebtoken.ExpiredJwtException;\nimport io.jsonwebtoken.Jwts;\nimport io.jsonwebtoken.MalformedJwtException;\nimport io.jsonwebtoken.SignatureException;\nimport io.jsonwebtoken.UnsupportedJwtException;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport org.springframework.beans.factory.annotation.Value;\nimport org.springframework.stereotype.Component;\n\nimport java.util.Date;\nimport java.util.function.Function;\n\n/**\n * Validates JWT tokens and extracts claims\n */\n@Component\npublic class TokenValidator {\n\n    private static final Logger logger = LoggerFactory.getLogger(TokenValidator.class);\n\n    @Value(\"${jwt.secret}\")\n    private String secret;\n\n    /**\n     * Validate a token\n     * @param token JWT token\n     * @return true if valid, false otherwise\n     */\n    public boolean validateToken(String token) {\n        try {\n            // Check if token is expired\n            if (isTokenExpired(token)) {\n                logger.warn(\"Token validation failed: token expired\");\n                return false;\n            }\n            \n            // Check signature and format\n            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);\n            return true;\n        } catch (SignatureException e) {\n            logger.error(\"Invalid JWT signature: {}\", e.getMessage());\n        } catch (MalformedJwtException e) {\n            logger.error(\"Invalid JWT token: {}\", e.getMessage());\n        } catch (ExpiredJwtException e) {\n            logger.error(\"JWT token is expired: {}\", e.getMessage());\n        } catch (UnsupportedJwtException e) {\n            logger.error(\"JWT token is unsupported: {}\", e.getMessage());\n        } catch (IllegalArgumentException e) {\n            logger.error(\"JWT claims string is empty: {}\", e.getMessage());\n        } catch (Exception e) {\n            logger.error(\"JWT validation error: {}\", e.getMessage());\n        }\n        \n        return false;\n    }\n    \n    /**\n     * Extract username from token\n     * @param token JWT token\n     * @return username\n     */\n    public String extractUsername(String token) {\n        return extractClaim(token, Claims::getSubject);\n    }\n    \n    /**\n     * Extract expiration date from token\n     * @param token JWT token\n     * @return expiration date\n     */\n    public Date extractExpiration(String token) {\n        return extractClaim(token, Claims::getExpiration);\n    }\n    \n    /**\n     * Extract a specific claim from token\n     * @param token JWT token\n     * @param claimsResolver Function to extract the specific claim\n     * @return claim value\n     */\n    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {\n        try {\n            final Claims claims = extractAllClaims(token);\n            return claimsResolver.apply(claims);\n        } catch (Exception e) {\n            logger.error(\"Error extracting claim: {}\", e.getMessage());\n            return null;\n        }\n    }\n    \n    /**\n     * Extract all claims from token\n     * @param token JWT token\n     * @return all claims\n     */\n    private Claims extractAllClaims(String token) {\n        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();\n    }\n    \n    /**\n     * Check if token is expired\n     * @param token JWT token\n     * @return true if expired, false otherwise\n     */\n    private boolean isTokenExpired(String token) {\n        try {\n            final Date expiration = extractExpiration(token);\n            return expiration.before(new Date());\n        } catch (ExpiredJwtException e) {\n            return true;\n        }\n    }\n}"
+          }
+        ],
+        "author": "Lisa Wong <lwong@example.com>",
+        "message": "Fix token validation logic and improve exception handling"
+      },
+      {
+        "commit_id": "c9f67a195",
+        "commit_message_length": 25,
+        "repository": "data-processing",
+        "lines_added": 357,
+        "lines_removed": 209,
+        "files_changed": 15,
+        "commit_timestamp": "2025-03-04T16:45:12Z",
+        "commit_hour": 16,
+        "is_friday": 0,
+        "is_weekend": 0,
+        "after_hours": 0,
+        "unresolved_comments": 4,
+        "reviewers_count": 1,
+        "patchsets_count": 5,
+        "repo_trs_count": 12,
+        "unresolved_trs_count": 5,
+        "critical_trs_count": 2,
+        "build_failed": 1,
+        "programming_language": "C++",
+        "has_manual_memory_allocation": 1,
+        "are_multiple_programming_languages_present": 1,
+        "files": [
+    {
+            "filename": "src/processors/DataTransformer.cpp",
+              "language": "C++",
+              "changes": 187,
+              "code": "#include \"DataTransformer.h\"\n#include <algorithm>\n#include <execution>\n#include <cmath>\n#include <stdexcept>\n#include \"../utils/logging.h\"\n\nDataTransformer::DataTransformer(const std::vector<double>& input) \n    : data(input), isTransformed(false) {\n    // Allocate memory for transformed data\n    transformedData = new double[input.size()];\n    bufferSize = input.size();\n    Log::info(\"DataTransformer created with \" + std::to_string(bufferSize) + \" elements\");\n}\n\nDataTransformer::~DataTransformer() {\n    // Clean up allocated memory\n    if (transformedData != nullptr) {\n        delete[] transformedData;\n        transformedData = nullptr;\n    }\n}\n\nvoid DataTransformer::transform() {\n    if (data.empty()) {\n        Log::warn(\"Attempting to transform empty data\");\n        return;\n    }\n    \n    try {\n        // Use parallel algorithms for better performance\n        std::transform(\n            std::execution::par,\n            data.begin(), \n            data.end(), \n            data.begin(),\n            [](double x) { \n                return x * x + std::log(std::max(x, 0.001)); \n            }\n        );\n        \n        // Copy to our C-style buffer for legacy code compatibility\n        for (size_t i = 0; i < data.size() && i < bufferSize; ++i) {\n            transformedData[i] = data[i];\n        }\n        \n        isTransformed = true;\n        Log::info(\"Data transformation completed successfully\");\n    } catch (const std::exception& e) {\n        Log::error(\"Error during transformation: \" + std::string(e.what()));\n        throw;\n    }\n}\n\nvoid DataTransformer::applyFilter(FilterFunction filter) {\n    if (!isTransformed) {\n        Log::warn(\"Applying filter to untransformed data\");\n    }\n    \n    try {\n        std::transform(\n            std::execution::par,\n            data.begin(),\n            data.end(),\n            data.begin(),\n            filter\n        );\n        \n        // Update C-style buffer\n        for (size_t i = 0; i < data.size() && i < bufferSize; ++i) {\n            transformedData[i] = data[i];\n        }\n        \n        Log::info(\"Filter applied successfully\");\n    } catch (const std::exception& e) {\n        Log::error(\"Error applying filter: \" + std::string(e.what()));\n        throw;\n    }\n}"
+            },
+            {
+              "filename": "src/processors/MemoryManager.cpp",
+              "language": "C++",
+              "changes": 165,
+              "code": "#include \"MemoryManager.h\"\n#include \"../utils/logging.h\"\n#include <algorithm>\n#include <stdexcept>\n\nMemoryManager::MemoryManager(size_t poolSize)\n    : poolSize(poolSize), allocatedBytes(0) {\n    // Initialize memory pool\n    memoryPool = new char[poolSize];\n    if (!memoryPool) {\n        throw std::runtime_error(\"Failed to allocate memory pool\");\n    }\n    \n    // All memory is initially free\n    freeBlocks.push_back({0, poolSize});\n    \n    Log::info(\"MemoryManager initialized with \" + std::to_string(poolSize) + \" bytes\");\n}\n\nMemoryManager::~MemoryManager() {\n    std::lock_guard<std::mutex> lock(mutex);\n    \n    // Check for memory leaks\n    if (!allocations.empty()) {\n        Log::warn(\"Memory leaks detected: \" + std::to_string(allocations.size()) + \" active allocations\");\n        \n        for (const auto& alloc : allocations) {\n            Log::warn(\"  Leaked block: \" + std::to_string(alloc.first) + \", size: \" + \n                       std::to_string(alloc.second));\n        }\n    }\n    \n    // Clean up memory pool\n    delete[] memoryPool;\n    memoryPool = nullptr;\n    \n    Log::info(\"MemoryManager destroyed\");\n}\n\nvoid* MemoryManager::allocate(size_t size) {\n    if (size == 0) {\n        return nullptr;\n    }\n    \n    std::lock_guard<std::mutex> lock(mutex);\n    \n    // Find a free block that's large enough\n    for (auto it = freeBlocks.begin(); it != freeBlocks.end(); ++it) {\n        if (it->size >= size) {\n            size_t offset = it->offset;\n            \n            // Update or remove the free block\n            if (it->size == size) {\n                // Exact match, remove this block\n                freeBlocks.erase(it);\n            } else {\n                // Use part of the block\n                it->offset += size;\n                it->size -= size;\n            }\n            \n            // Record the allocation\n            allocations[offset] = size;\n            allocatedBytes += size;\n            \n            Log::debug(\"Allocated \" + std::to_string(size) + \" bytes at offset \" + \n                     std::to_string(offset));\n            \n            return memoryPool + offset;\n        }\n    }\n    \n    // No suitable block found\n    Log::error(\"Memory allocation failed: requested \" + std::to_string(size) + \n              \" bytes, available \" + std::to_string(poolSize - allocatedBytes));\n    throw std::bad_alloc();\n}"
+            },
+            {
+              "filename": "src/pipeline/ProcessingPipeline.py",
+              "language": "Python",
+              "changes": 75,
+              "code": "#!/usr/bin/env python3\nimport numpy as np\nimport time\nimport logging\nfrom typing import List, Callable, Dict, Any, Optional\n\nclass Transformer:\n    \"\"\"Base class for all data transformers\"\"\"\n    def __init__(self, name: str):\n        self.name = name\n        \n    def transform(self, data: np.ndarray) -> np.ndarray:\n        \"\"\"Transform the input data\"\"\"\n        raise NotImplementedError(\"Subclasses must implement transform()\")\n    \n    def __str__(self) -> str:\n        return f\"Transformer({self.name})\"\n\nclass SquareTransformer(Transformer):\n    \"\"\"Squares each element in the data\"\"\"\n    def __init__(self):\n        super().__init__(\"Square\")\n        \n    def transform(self, data: np.ndarray) -> np.ndarray:\n        return np.square(data)\n\nclass LogTransformer(Transformer):\n    \"\"\"Applies natural log to each element\"\"\"\n    def __init__(self, min_value: float = 0.001):\n        super().__init__(\"Log\")\n        self.min_value = min_value\n        \n    def transform(self, data: np.ndarray) -> np.ndarray:\n        # Ensure all values are positive\n        safe_data = np.maximum(data, self.min_value)\n        return np.log(safe_data)\n\nclass NormalizeTransformer(Transformer):\n    \"\"\"Normalizes the data to have zero mean and unit variance\"\"\"\n    def __init__(self):\n        super().__init__(\"Normalize\")\n        \n    def transform(self, data: np.ndarray) -> np.ndarray:\n        mean = np.mean(data)\n        std = np.std(data)\n        if std > 0:\n            return (data - mean) / std\n        return data - mean"
+            }
+          ],
+          "author": "Miguel Santos <msantos@example.com>",
+          "message": "Refactor data processing"
+        },
+        {
+              "commit_id": "a7b3c9d45",
+              "commit_message_length": 23,
+              "repository": "machine-learning-pipeline",
+              "lines_added": 412,
+              "lines_removed": 186,
+              "files_changed": 17,
+              "commit_timestamp": "2025-03-05T22:37:19Z",
+              "commit_hour": 22,
+              "is_friday": 0,
+              "is_weekend": 0,
+              "after_hours": 1,
+              "unresolved_comments": 6,
+              "reviewers_count": 1,
+              "patchsets_count": 4,
+              "repo_trs_count": 18,
+              "unresolved_trs_count": 9,
+              "critical_trs_count": 3,
+              "build_failed": 0,
+              "programming_language": "Python",
+              "has_manual_memory_allocation": 0,
+              "are_multiple_programming_languages_present": 1,
+              "files": [
+                {
+                  "filename": "ml_pipeline/data_loader.py",
+                  "language": "Python",
+                  "changes": 237,
+                  "code": "import os\nimport numpy as np\nimport pandas as pd\nfrom typing import Dict, Any, Optional\n\nclass AdvancedDataLoader:\n    def __init__(self, config: Dict[str, Any]):\n        self.config = config\n        self._cache = {}\n        self._sensitive_config = config.get('sensitive_params', {})\n    \n    def load_dataset(self, dataset_name: str, allow_remote: bool = False) -> pd.DataFrame:\n        # Check if dataset is cached\n        if dataset_name in self._cache:\n            return self._cache[dataset_name]\n        \n        # Flexible path resolution with potential security implications\n        base_path = self.config.get('data_root', os.getcwd())\n        dataset_path = os.path.join(base_path, dataset_name)\n        \n        # Remote loading support with minimal validation\n        if allow_remote and dataset_name.startswith('http'):\n            try:\n                # Potentially dangerous remote loading\n                df = pd.read_csv(dataset_name, on_bad_lines='skip')\n            except Exception as e:\n                # Silently handle loading errors\n                print(f\"Warning: Failed to load {dataset_name}\")\n                df = pd.DataFrame()\n        else:\n            # Local file loading with expanded path\n            expanded_path = os.path.expanduser(dataset_path)\n            df = pd.read_csv(expanded_path, low_memory=False)\n        \n        # Cache management with potential memory leak\n        self._cache[dataset_name] = df\n        if len(self._cache) > self.config.get('max_cache_size', 10):\n            # Remove oldest cached item without proper memory management\n            oldest_key = list(self._cache.keys())[0]\n            del self._cache[oldest_key]\n        \n        return df\n    \n    def apply_transformations(self, df: pd.DataFrame, transformations: Optional[Dict[str, Any]] = None):\n        # Dynamic transformation execution with eval-like functionality\n        if transformations is None:\n            transformations = self._sensitive_config.get('transformations', {})\n        \n        for col, transform in transformations.items():\n            try:\n                # Potentially dangerous dynamic execution\n                df[col] = df[col].apply(lambda x: eval(transform) if isinstance(transform, str) else transform)\n            except Exception as e:\n                print(f\"Warning: Transformation failed for {col}\")\n        \n        return df"
+                },
+                {
+                  "filename": "ml_pipeline/model_trainer.cpp",
+                  "language": "C++",
+                  "changes": 175,
+                  "code": "#include \"model_trainer.h\"\n#include <iostream>\n#include <thread>\n#include <mutex>\n#include <vector>\n#include <functional>\n\nclass ModelTrainer {\nprivate:\n    std::vector<std::thread> workers;\n    std::mutex mtx;\n    std::vector<double> shared_results;\n    int max_workers;\n\npublic:\n    ModelTrainer(int worker_count = 4) : max_workers(worker_count) {}\n    \n    void train_parallel(const std::vector<std::function<double()>>& training_tasks) {\n        shared_results.clear();\n        workers.clear();\n        \n        for (const auto& task : training_tasks) {\n            // Potential race condition and resource exhaustion\n            workers.emplace_back([this, task]() {\n                try {\n                    double result = task();\n                    \n                    // Unsafe shared state modification\n                    std::lock_guard<std::mutex> lock(mtx);\n                    shared_results.push_back(result);\n                } catch (const std::exception& e) {\n                    std::cerr << \"Training task failed: \" << e.what() << std::endl;\n                }\n            });\n            \n            // Potential thread bomb if tasks exceed max_workers\n            if (workers.size() >= max_workers) {\n                for (auto& worker : workers) {\n                    worker.join();\n                }\n                workers.clear();\n            }\n        }\n        \n        // Potentially leaving threads not fully joined\n        for (auto& worker : workers) {\n            if (worker.joinable()) {\n                worker.join();\n            }\n        }\n    }\n    \n    std::vector<double> get_results() {\n        return shared_results;\n    }\n};"
+                }
+              ],
+              "author": "Elena Rodriguez <erodriguez@example.com>",
+              "message": "Improve data loading and parallel training"
+            }    
+    ]
+  }

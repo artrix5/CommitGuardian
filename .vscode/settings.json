@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "undefined/subscriptions/ce6feac7-57b0-4679-8ca8-c7eb1a424be5/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/HackathonEricsson",
+    "appService.deploySubpath": "."
+}
