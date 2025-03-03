@@ -1,0 +1,16 @@
+{
+  "name": "git-commit-risk-analyzer",
+  "version": "1.0.0",
+  "description": "Git Commit Risk Analyzer with Azure ML integration",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.8.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "node-fetch": "^2.6.9",
+    "path": "^0.12.7"
+  }
+}
