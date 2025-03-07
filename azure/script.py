@@ -20,7 +20,7 @@ def init():
     print(f"Files in model directory: {os.listdir(model_dir)}")
     
     # Load MLflow model - this handles both classification and regression in one model
-    model_path = os.path.join(model_dir, "CommitPredictionAI")
+    model_path = os.path.join(model_dir, "predict_risk")
     print(f"Loading model from: {model_path}")
     
     model = mlflow.pyfunc.load_model(model_path)
