@@ -14,19 +14,116 @@
 
 <body>
     <div class="container">
-        <h1>Git Commit Risk Analyzer</h1>
+        <h1>AI Commit Risk Predictor</h1>
 
         <div class="demo-banner">
             AI-POWERED MODE - Analyze commit risk with machine learning
         </div>
 
+        <div class="model-description-section gray-section">
+            <div class="model-description">
+                <p class="model-intro">Our machine learning model systematically evaluates commit risk by analyzing
+                    comprehensive historical data from both problematic and successful code integrations. <b>The primary
+                        goal is to reduce the number of problematic integrations and minimize potential Troubleshooting
+                        Reports (TRs).</b></p>
+                <p>
+                <div class="model-description">
+
+                    <p class="model-intro">After analyzing commit data with our machine learning model, results are
+                        processed
+                        by GPT-4o-mini to identify potential risks and perform advanced code analysis. The LLM generates
+                        targeted recommendations to minimize integration issues, highlight code quality concerns, and
+                        suggest specific risk mitigation strategies tailored to your commit patterns.</p>
+                    </p>
+                </div>
+
+                <div class="model-features">
+                    <div class="feature-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-code">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                        <span>Code Metrics: Analyzes number of added/deleted lines, affected files, and programming
+                            languages used</span>
+                    </div>
+
+                    <div class="feature-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-users">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="9" cy="7" r="4"></circle>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        </svg>
+                        <span>Collaboration Insights: Considers number of reviewers, comments, patchsets, and developer
+                            experience</span>
+                    </div>
+
+                    <div class="feature-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-alert-triangle">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                            </path>
+                            <line x1="12" y1="9" x2="12" y2="13"></line>
+                            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                        </svg>
+                        <span>TR Analysis: Evaluates past, active, and critical Troubleshooting Reports for the
+                            repository</span>
+                    </div>
+
+                    <div class="feature-item">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-clock">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>Temporal Risk: Analyzes commit timing (day, time, after-hours, weekends) with increased
+                            risk scoring</span>
+                    </div>
+                </div>
+
+                <div class="risk-scale">
+                    <h3>Risk Assessment Scale</h3>
+                    <div class="risk-levels">
+                        <div class="risk-level low">
+                            <span class="risk-indicator">Low Risk (0-39)</span>
+                            <p>Small, focused changes with minimal potential for disruption. Typically involves minor
+                                refactoring or documentation updates.</p>
+                        </div>
+                        <div class="risk-level medium">
+                            <span class="risk-indicator">Medium Risk (40-69)</span>
+                            <p>Moderate changes that require careful review. May involve significant feature
+                                modifications or architectural adjustments.</p>
+                        </div>
+                        <div class="risk-level high">
+                            <span class="risk-indicator">High Risk (70-100)</span>
+                            <p>Substantial changes with higher potential for introducing complex issues. Involves
+                                critical system components or extensive refactoring.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="model-disclaimer">
+                    <p><strong>Note:</strong> The risk assessment is a predictive tool to support decision-making, not a
+                        definitive guarantee of commit quality. Human review and judgment remain crucial. <b>For the
+                            purpose of demonstrating the concept, all data used in this model is mock data.</b></p>
+                </div>
+            </div>
+        </div>
+
         <div class="main-content">
+            <!-- Left side - Analysis Section -->
             <div class="analysis-section">
                 <div class="input-section">
-                    <h3>Enter Commit Hash</h3>
+                    <h3 class="blue-heading">Enter Commit Hash</h3>
                     <div class="form-group">
                         <label for="commitHashInput">Commit Hash:</label>
-                        <input type="text" id="commitHashInput" placeholder="e.g., a7c31fd92">
+                        <input type="text" id="commitHashInput" placeholder="e.g., e1f2g3h4i">
                     </div>
                     <button id="analyzeBtn" class="btn btn-primary">Analyze Commit</button>
                 </div>
@@ -36,25 +133,32 @@
                 </div>
 
                 <div class="sample-section">
-                    <h3>Try Sample Commits</h3>
+                    <h3 class="blue-heading">Try Sample Commits</h3>
                     <div class="sample-buttons">
-                        <button id="commit1Btn" class="btn">Small Commit (a7c31fd92)</button>
-                        <button id="commit2Btn" class="btn">Medium Commit (b8d45e720)</button>
-                        <button id="commit3Btn" class="btn">Large Commit (c9f67a195)</button>
+                      <div class="sample-buttons-row">
+                        <button id="commit1Btn" class="btn">e1f2g3h4i</button>
+                        <button id="commit2Btn" class="btn">t3u4v5w6x</button>
+                        <button id="commit3Btn" class="btn">j5k6l7m8n</button>
+                      </div>
+                      <div class="sample-buttons-row">
+                        <button id="commit4Btn" class="btn">y7z8a9b0c</button>
+                        <button id="commit5Btn" class="btn">o9p0q1r2s</button>
+                        <button id="commit6Btn" class="btn">d1e2f3g4h</button>
+                      </div>
                     </div>
-                </div>
+                  </div>
 
-                <div id="loading" class="loading">
+                <div id="loading" class="loading hidden">
                     <div class="spinner"></div>
                     <p>Analyzing commit with AI model...</p>
                 </div>
 
-                <div id="results" class="results">
-                    <h2>Analysis Results</h2>
+                <div id="results" class="results hidden">
+                    <h2 class="blue-heading">Analysis Results</h2>
                     <div class="commit-info">
-                        <p id="repoName" class="repo-name">Repository: Unknown</p>
                         <p id="commitHash" class="commit-hash"></p>
                         <p id="commitMessage" class="commit-message"></p>
+                        <p id="repoName" class="repo-name">Repository: Unknown</p>
                         <p id="commitAuthor" class="commit-author"></p>
                         <p id="commitDate" class="commit-date"></p>
                     </div>
@@ -67,58 +171,56 @@
                             <div class="tooltip">
                                 <h4>AI Risk Assessment</h4>
                                 <p><strong>Low Risk (0-39):</strong> Small, focused changes with minimal impact.</p>
-                                <p><strong>Medium Risk (40-69):</strong> Moderate changes that warrant careful review.
-                                </p>
-                                <p><strong>High Risk (70-100):</strong> Large changes with higher potential for issues.
-                                </p>
-                                <p>Our Azure ML model considers: lines changed, number of files, day/time of commit,
-                                    unresolved comments, previous TRs, patchsets, and reviewers.</p>
+                                <p><strong>Medium Risk (40-69):</strong> Moderate changes that warrant careful review.</p>
+                                <p><strong>High Risk (70-100):</strong> Large changes with higher potential for issues.</p>
                             </div>
                         </button>
                     </div>
 
-                    <div class="stats">
-                        <div class="stat-item">
-                            <div class="stat-label">Files Changed</div>
-                            <div id="filesChanged" class="stat-value">0</div>
+                    <div class="stats combined-stats">
+                        <!-- First row -->
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-label">Files Changed</div>
+                                <div id="filesChanged" class="stat-value">4</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Insertions</div>
+                                <div id="insertions" class="stat-value positive-value">+200</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Deletions</div>
+                                <div id="deletions" class="stat-value negative-value">-60</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Total Changes</div>
+                                <div id="totalChanges" class="stat-value">260</div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Insertions</div>
-                            <div id="insertions" class="stat-value">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Deletions</div>
-                            <div id="deletions" class="stat-value">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Total Changes</div>
-                            <div id="totalChanges" class="stat-value">0</div>
-                        </div>
-                    </div>
 
-                    <div class="stats ml-stats">
-                        <div class="stat-item">
-                            <div class="stat-label">Reviewers</div>
-                            <div id="reviewersCount" class="stat-value">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Patchsets</div>
-                            <div id="patchsetsCount" class="stat-value">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Unresolved Comments</div>
-                            <div id="unresolvedComments" class="stat-value">0</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-label">Time of Day</div>
-                            <div id="timeOfDay" class="stat-value">
-                                <script>document.write(new Date().getHours() + ':00')</script>
+                        <!-- Second row -->
+                        <div class="stats-row">
+                            <div class="stat-item">
+                                <div class="stat-label">Reviewers</div>
+                                <div id="reviewersCount" class="stat-value">1</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Patchsets</div>
+                                <div id="patchsetsCount" class="stat-value" style="color: var(--warning)">3</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Comments</div>
+                                <div id="unresolvedComments" class="stat-value" style="color: var(--primary)">2</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Time of day</div>
+                                <div id="timeOfDay" class="stat-value" style="color: var(--primary-dark)">02:00</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="files-section">
-                        <h3>Changed Files</h3>
+                        <h3 class="blue-heading">Changed Files</h3>
                         <div id="filesList" class="files-list"></div>
 
                         <div class="code-preview" id="codePreview">
@@ -126,15 +228,75 @@
                         </div>
                     </div>
 
+                    <!-- Add this HTML under the Changed Files section in your HTML file -->
+                    <div class="comments-section">
+
+                        <h3 class="blue-heading">Review Comments</h3>
+                        <div id="commentsList" class="comments-list">
+                            <!-- Comments will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Patchset History Section -->
+                    <div class="patchset-section">
+                        <h3 class="blue-heading">Patchset History</h3>
+                        <div class="patchsets-container">
+                            <div class="patchset-summary">
+                                <div class="patchset-count">
+                                    <span class="count-label">Total Patchsets:</span>
+                                    <span id="patchsetTotalCount" class="count-value">4</span>
+                                </div>
+                                <div class="patchset-timeline" id="patchsetTimeline">
+                                    <!-- Patchset timeline will be populated here -->
+                                </div>
+                            </div>
+
+                            <div class="patchsets-list" id="patchsetsList">
+                                <!-- Patchsets will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CI/CD Test Status Section -->
+                    <div class="ci-cd-section">
+                        <h3 class="blue-heading">CI/CD Test Status</h3>
+                        <div class="test-runs-container">
+                            <div class="test-run-summary">
+                                <div id="testStatusIndicator" class="test-status-indicator passing">
+                                    <span id="testStatusText">Passing</span>
+                                </div>
+                                <div class="test-stats">
+                                    <div class="test-stat">
+                                        <span class="test-stat-label">Test Runs:</span>
+                                        <span id="testRunCount" class="test-stat-value">4</span>
+                                    </div>
+                                    <div class="test-stat">
+                                        <span class="test-stat-label">Passing:</span>
+                                        <span id="passingRunCount" class="test-stat-value">3</span>
+                                    </div>
+                                    <div class="test-stat">
+                                        <span class="test-stat-label">Failing:</span>
+                                        <span id="failingRunCount" class="test-stat-value">1</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="test-runs-list" id="testRunsList">
+                                <!-- Test runs will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations section -->
                     <div class="recommendations">
-                        <h3>AI Recommendations</h3>
+                        <h3 class="blue-heading">AI Recommendations</h3>
                         <ul id="recommendationList" class="recommendation-list">
                             <li>No recommendations available.</li>
                         </ul>
                     </div>
 
                     <div class="model-info">
-                        <h3>Model Information</h3>
+                        <h3 class="blue-heading">Model Information</h3>
                         <div class="model-details">
                             <div class="model-detail-item">
                                 <span class="detail-label">Model:</span>
@@ -153,27 +315,65 @@
                 </div>
             </div>
 
-            <!-- TR section - initially hidden -->
-            <div id="trSection" class="tr-section" style="display: none;">
-                <h2>Troubleshooting Reports</h2>
-                <div class="tr-filters">
-                    <div class="tr-filter-repo">
-                        <span>Repository:</span>
-                        <span id="trRepoName">None selected</span>
+            <!-- Right side - Side Sections -->
+            <div class="side-sections">
+                <!-- TR section - initially hidden -->
+                <div id="trSection" class="tr-section hidden">
+                    <h2 class="blue-heading">Troubleshooting Reports</h2>
+                    <div class="tr-filters">
+                        <div class="tr-filter-repo">
+                            <span>Repository:</span>
+                            <span id="trRepoName">None selected</span>
+                        </div>
+                        <div class="tr-filter-year">
+                            <span>Year:</span>
+                            <select id="trYearFilter">
+                                <option value="2025">2025 only</option>
+                                <option value="2024">2024 only</option>
+                                <option value="all" selected>All years</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="tr-filter-year">
-                        <span>Year:</span>
-                        <select id="trYearFilter">
-                            <option value="2025">2025 only</option>
-                            <option value="2024">2024 only</option>
-                            <option value="all" selected>All years</option>
-                        </select>
+
+                    <div id="trList" class="tr-list">
+                        <div class="tr-empty-state">
+                            Select a repository to view related TRs
+                        </div>
                     </div>
                 </div>
+                <!-- Repository Activity section - initially hidden -->
+                <div id="repoActivitySection" class="repo-activity-section hidden">
+                    <h2 class="blue-heading">Repository Activity</h2>
 
-                <div id="trList" class="tr-list">
-                    <div class="tr-empty-state">
-                        Select a repository to view related TRs
+                    <div class="compact-merge-stats">
+                        <div class="compact-stats-row">
+                            <div class="compact-stat">
+                                <div class="compact-stat-label">Today's Merged</div>
+                                <div class="compact-stat-value">
+                                    <span id="todayMergeCount">0</span>
+                                    <span class="compact-trend positive">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                        <span id="mergeCountDelta">0%</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="compact-tabs">
+                        <button class="compact-tab active" data-tab="merged">Merged Today</button>
+                    </div>
+
+                    <div class="tab-content">
+                        <!-- Merged Commits Tab -->
+                        <div class="tab-pane active" id="mergedCommitsPane">
+                            <div class="compact-list" id="mergedCommitsList"></div>
+                        </div>
+
                     </div>
                 </div>
             </div>
