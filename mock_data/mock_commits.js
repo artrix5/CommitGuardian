@@ -318,7 +318,6 @@ private static final int MAX_LOGIN_ATTEMPTS = 5;
 private Map<String, Integer> loginAttempts = new HashMap<>();
 
 public boolean authenticate(String username, String password) {
-    // SECURITY VULNERABILITY: No rate limiting implementation despite defining MAX_LOGIN_ATTEMPTS
     // No account lockout mechanism after failed attempts
     
     if (username == null || password == null) {
@@ -330,22 +329,18 @@ public boolean authenticate(String username, String password) {
         return false;
     }
     
-    // SECURITY VULNERABILITY: Timing attack vulnerability - early returns create timing differences
     // between valid and invalid usernames
     
     boolean result = BCrypt.checkpw(password, storedHash);
     
     // Log authentication attempt (but without storing IP or device info)
     logger.info("Authentication attempt for user: " + username + " result: " + result);
-    // SECURITY VULNERABILITY: Logging sensitive info (username + authentication result) without proper sanitization
     
     return result;
 }
 
 private String getStoredPassword(String username) {
-    // SECURITY VULNERABILITY: No input validation on username parameter before database query
     String query = "SELECT password_hash FROM users WHERE username = '" + username + "'";
-    // SECURITY VULNERABILITY: SQL injection vulnerability in direct string concatenation
     
     try (Statement stmt = connection.createStatement();
          ResultSet rs = stmt.executeQuery(query)) {
@@ -360,7 +355,6 @@ private String getStoredPassword(String username) {
 
 public void updatePassword(String username, String newPassword) {
     String hashedPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt(10));
-    // SECURITY VULNERABILITY: Fixed work factor of 10 instead of adjustable parameter
     
     String query = "UPDATE users SET password_hash = ? WHERE username = ?";
     try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -393,7 +387,6 @@ assertFalse(BCrypt.checkpw("wrongPassword", hashedPassword));
 @Test
 public void testAuthentication() {
 // Test basic authentication flow
-// SECURITY VULNERABILITY: Test doesn't verify rate limiting or account lockout
 }`
             },
             {
@@ -409,7 +402,6 @@ public static String hashPassword(String password) {
 
 // After
 public class PasswordUtils {
-// SECURITY VULNERABILITY: Hardcoded secret key in source code
 private static final String SECRET_KEY = "hd72jdu27shKAus91";
 
 public static String hashPassword(String password) {
@@ -417,31 +409,24 @@ public static String hashPassword(String password) {
         throw new IllegalArgumentException("Password cannot be null");
     }
     
-    // SECURITY VULNERABILITY: No password strength validation
     return BCrypt.hashpw(password, BCrypt.gensalt(10));
-    // SECURITY VULNERABILITY: Fixed work factor instead of adaptive to hardware capabilities
 }
 
 public static boolean validatePassword(String password) {
-    // SECURITY VULNERABILITY: Weak password validation
     return password != null && password.length() >= 8;
     // Should check for uppercase, lowercase, numbers, special chars, and common passwords
 }
 
 public static String encryptData(String data) {
     try {
-        // SECURITY VULNERABILITY: Using outdated encryption algorithm
         Cipher cipher = Cipher.getInstance("DES/ECB/PKCS5Padding");
-        // SECURITY VULNERABILITY: ECB mode is insecure, no IV used
         
         SecretKeySpec key = new SecretKeySpec(SECRET_KEY.getBytes("UTF-8"), "DES");
-        // SECURITY VULNERABILITY: Key derivation using simple string bytes, not a proper KDF
         
         cipher.init(Cipher.ENCRYPT_MODE, key);
         byte[] encrypted = cipher.doFinal(data.getBytes("UTF-8"));
         return Base64.getEncoder().encodeToString(encrypted);
     } catch (Exception e) {
-        // SECURITY VULNERABILITY: Catching generic Exception and not handling properly
         e.printStackTrace();
         return null;
     }
@@ -467,30 +452,23 @@ public static String decryptData(String encryptedData) {
                 changes: "+45, -0",
                 code: `// New security configuration
 public class SecurityConfig {
-// SECURITY VULNERABILITY: Hardcoded configuration values
 private static final int SESSION_TIMEOUT = 30; // 30 minutes
 private static final int MAX_LOGIN_ATTEMPTS = 5;
 
-// SECURITY VULNERABILITY: No password policy enforcement
 
 public static void configurePasswordPolicy(PasswordPolicyConfig config) {
     // Method stub without implementation
-    // SECURITY VULNERABILITY: Missing actual configuration
 }
 
 public static void configureSessionManagement(SessionConfig config) {
     config.setSessionTimeout(SESSION_TIMEOUT);
-    // SECURITY VULNERABILITY: Session timeout is hardcoded, not configurable
     
-    // SECURITY VULNERABILITY: No session fixation protection
     config.setInvalidateOnAuthentication(false);
     
-    // SECURITY VULNERABILITY: Insufficient session ID entropy
     config.setSessionIdLength(16);
 }
 
 public static void configureCsrf(CsrfConfig config) {
-    // SECURITY VULNERABILITY: CSRF protection disabled by default
     config.setEnabled(false);
 }
 }`
@@ -509,7 +487,6 @@ public UserController(AuthService authService) {
     this.authService = authService;
 }
 
-// SECURITY VULNERABILITY: No rate limiting on login endpoint
 @PostMapping("/login")
 public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
     boolean authenticated = authService.authenticate(
@@ -521,21 +498,16 @@ public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
         // Generate session token
         String token = generateToken(request.getUsername());
         
-        // SECURITY VULNERABILITY: No token expiration
         return ResponseEntity.ok(new LoginResponse(token));
     } else {
-        // SECURITY VULNERABILITY: Error response distinguishes between invalid username and password
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .body(new LoginResponse("Invalid username or password"));
     }
 }
 
-// SECURITY VULNERABILITY: No CSRF protection on password change
 @PostMapping("/change-password")
 public ResponseEntity<String> changePassword(@RequestBody PasswordChangeRequest request,
                                            @RequestHeader("Authorization") String token) {
-    // SECURITY VULNERABILITY: No verification that current password is correct
-    // SECURITY VULNERABILITY: No validation of token
     
     authService.updatePassword(
         request.getUsername(),
@@ -546,7 +518,6 @@ public ResponseEntity<String> changePassword(@RequestBody PasswordChangeRequest 
 }
 
 private String generateToken(String username) {
-    // SECURITY VULNERABILITY: Weak token generation
     return Base64.getEncoder().encodeToString((username + ":" + System.currentTimeMillis()).getBytes());
 }
 }`
@@ -607,7 +578,6 @@ private static final Logger logger = LoggerFactory.getLogger(PaymentService.clas
 private TokenizationService tokenService;
 private PaymentGateway gateway;
 
-// SECURITY VULNERABILITY: No constructor dependency injection, difficult to test
 public PaymentService() {
     this.tokenService = new TokenizationService();
     this.gateway = new PaymentGatewayImpl();
@@ -618,7 +588,6 @@ public String processPayment(CreditCard card, double amount) {
         throw new IllegalArgumentException("Card cannot be null");
     }
     
-    // SECURITY VULNERABILITY: Logs contain sensitive card data
     logger.info("Processing payment for card: " + card.getNumber() + ", amount: " + amount);
     
     try {
@@ -629,31 +598,22 @@ public String processPayment(CreditCard card, double amount) {
         
         // Generate token
         String token = tokenService.tokenizeCard(card);
-        
-        // SECURITY VULNERABILITY: No random nonce or idempotency key to prevent replay attacks
-        
+                
         // Process payment
         PaymentResult result = gateway.processPayment(token, amount);
-        
-        // SECURITY VULNERABILITY: Does not validate gateway response for tampering
-        
+                
         if (result.isSuccessful()) {
             // Store transaction in database
             String query = "INSERT INTO transactions (amount, card_last_four, status) VALUES (" + 
                            amount + ", '" + card.getNumber().substring(card.getNumber().length() - 4) + "', 'SUCCESS')";
-            // SECURITY VULNERABILITY: SQL injection in direct string concatenation
             
             executeUpdate(query);
-            
-            // SECURITY VULNERABILITY: No validation of amount - potential for integer overflow on large amounts
-            
+                        
             return result.getTransactionId();
         } else {
-            // SECURITY VULNERABILITY: Detailed error information exposed to client
             return "ERROR: " + result.getErrorMessage();
         }
     } catch (Exception e) {
-        // SECURITY VULNERABILITY: Generic exception handling
         logger.error("Payment processing error", e);
         return "ERROR: " + e.getMessage();
     }
@@ -665,17 +625,12 @@ private boolean isValidCard(CreditCard card) {
     if (card.getExpirationDate().before(now)) {
         return false;
     }
-    
-    // SECURITY VULNERABILITY: Basic Luhn algorithm check missing for card validation
-    
-    // SECURITY VULNERABILITY: No validation for suspicious transaction patterns (amount, frequency)
-    
+        
     return true;
 }
 
 private void executeUpdate(String query) {
     // Database connection logic
-    // SECURITY VULNERABILITY: Connection details potentially hardcoded elsewhere
 }
 }`
         },
@@ -693,10 +648,8 @@ public String tokenizeCard(CreditCard card) {
 
 // After
 public class TokenizationService {
-// SECURITY VULNERABILITY: Hardcoded encryption key in source code
 private static final String ENCRYPTION_KEY = "AxT8s1Z9yKp3L7Jm";
 
-// SECURITY VULNERABILITY: Using static initialization vector instead of random per encryption
 private static final String IV = "RandomIV123456";
 
 public String tokenizeCard(CreditCard card) {
@@ -710,32 +663,25 @@ public String tokenizeCard(CreditCard card) {
             card.getNumber(),
             card.getExpirationDate(),
             card.getCvv());
-        
-        // SECURITY VULNERABILITY: Storing CVV with card data, violates PCI-DSS
-        
+                
         // Encrypt card data
         String encryptedData = encrypt(cardData);
         
         // Generate token
         String token = UUID.randomUUID().toString().replace("-", "") + 
                        Base64.getEncoder().encodeToString(encryptedData.getBytes());
-        
-        // SECURITY VULNERABILITY: Token is predictable (UUID + base64 of data)
-        // SECURITY VULNERABILITY: No token expiration mechanism
-        
+                
         // Store token mapping
         storeTokenMapping(token, card.getNumber());
         
         return token;
     } catch (Exception e) {
-        // SECURITY VULNERABILITY: Generic exception handling with no specific recovery
         throw new RuntimeException("Failed to tokenize card", e);
     }
 }
 
 private String encrypt(String data) {
     try {
-        // SECURITY VULNERABILITY: Using weak encryption algorithm
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         SecretKeySpec keySpec = new SecretKeySpec(ENCRYPTION_KEY.getBytes(), "AES");
         IvParameterSpec ivSpec = new IvParameterSpec(IV.getBytes());
@@ -749,11 +695,9 @@ private String encrypt(String data) {
 }
 
 private void storeTokenMapping(String token, String cardNumber) {
-    // SECURITY VULNERABILITY: No secure storage considerations mentioned
     // Should be using a separate, highly-secured database with strict access controls
     
     // Insert token mapping into database
-    // SECURITY VULNERABILITY: Storing full card number instead of just last 4 digits
 }
 }`
         },
@@ -776,8 +720,6 @@ String token = tokenService.tokenizeCard(testCard);
 assertNotNull(token);
 assertTrue(token.length() > 32);
 
-// SECURITY VULNERABILITY: Test doesn't verify token format or security properties
-// SECURITY VULNERABILITY: Test contains hardcoded credit card number
 }
 
 @Test
@@ -785,7 +727,6 @@ public void testPaymentProcessing() {
 // Test complete payment flow
 PaymentService paymentService = new PaymentService();
 // Create test dependencies
-// SECURITY VULNERABILITY: Test doesn't mock external dependencies
 
 CreditCard testCard = new CreditCard(
     "4111111111111111",
@@ -795,7 +736,6 @@ CreditCard testCard = new CreditCard(
 
 String result = paymentService.processPayment(testCard, 100.00);
 
-// SECURITY VULNERABILITY: No validation of proper error handling or edge cases
 assertNotNull(result);
 }`
         },
@@ -814,7 +754,6 @@ public PaymentController(PaymentService paymentService) {
     this.paymentService = paymentService;
 }
 
-// SECURITY VULNERABILITY: No rate limiting on payment endpoint
 @PostMapping("/process")
 public ResponseEntity<PaymentResponse> processPayment(@RequestBody PaymentRequest request) {
     try {
@@ -824,27 +763,19 @@ public ResponseEntity<PaymentResponse> processPayment(@RequestBody PaymentReques
             parseExpirationDate(request.getExpiration()),
             request.getCvv()
         );
-        
-        // SECURITY VULNERABILITY: Processing payment directly without validation checks
-        
+                
         // Process payment
         String transactionId = paymentService.processPayment(card, request.getAmount());
-        
-        // SECURITY VULNERABILITY: No validation of transaction result format
-        
+                
         return ResponseEntity.ok(new PaymentResponse(transactionId, "SUCCESS"));
     } catch (Exception e) {
-        // SECURITY VULNERABILITY: Returning detailed error messages to client
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(new PaymentResponse(null, "ERROR: " + e.getMessage()));
     }
 }
 
-// SECURITY VULNERABILITY: Using GET for retrieving sensitive transaction data
 @GetMapping("/transaction/{id}")
 public ResponseEntity<TransactionDetails> getTransaction(@PathVariable String id) {
-    // SECURITY VULNERABILITY: No authentication check for accessing transaction details
-    // SECURITY VULNERABILITY: No authorization validation that user owns this transaction
     
     // Retrieve transaction details
     TransactionDetails details = retrieveTransactionDetails(id);
@@ -857,7 +788,6 @@ public ResponseEntity<TransactionDetails> getTransaction(@PathVariable String id
 }
 
 private Date parseExpirationDate(String expiration) {
-    // SECURITY VULNERABILITY: No validation of date format
     String[] parts = expiration.split("/");
     int month = Integer.parseInt(parts[0]);
     int year = Integer.parseInt(parts[1]) + 2000;
@@ -893,7 +823,6 @@ public CreditCard(String number, Date expirationDate, String cvv) {
     this.number = number;
     this.expirationDate = expirationDate;
     this.cvv = cvv;
-    // SECURITY VULNERABILITY: No validation in constructor
 }
 
 public CreditCard(String number, Date expirationDate, String cvv, 
@@ -904,12 +833,10 @@ public CreditCard(String number, Date expirationDate, String cvv,
     this.cardholderName = cardholderName;
     this.billingAddress = billingAddress;
     this.billingZip = billingZip;
-    // SECURITY VULNERABILITY: No validation in constructor
 }
 
 // Getters
 public String getNumber() {
-    // SECURITY VULNERABILITY: Returns full card number, not masked
     return number;
 }
 
@@ -918,7 +845,6 @@ public Date getExpirationDate() {
 }
 
 public String getCvv() {
-    // SECURITY VULNERABILITY: Returns CVV directly
     return cvv;
 }
 
@@ -934,8 +860,6 @@ public String getBillingZip() {
     return billingZip;
 }
 
-// SECURITY VULNERABILITY: No method to securely dispose of sensitive data
-// SECURITY VULNERABILITY: No method to mask card number for display
 }`
         },
         {
@@ -1032,19 +956,16 @@ private:
     std::queue<std::string> queue;
     std::mutex mutex;
     
-    // SECURITY VULNERABILITY: Hardcoded encryption key
     const unsigned char key[16] = {0x32, 0x87, 0x19, 0x6d, 0x45, 0x9a, 0x2c, 0x53, 
                                   0x67, 0x12, 0xf9, 0xb4, 0x39, 0x78, 0x01, 0xef};
     
 public:
     MessageQueue() {
         // Initialize without checking return values
-        // SECURITY VULNERABILITY: No validation of OpenSSL initialization
     }
     
     void sendMessage(const std::string& message) {
         if (message.empty()) {
-            // SECURITY VULNERABILITY: Allows empty messages which might cause issues downstream
             return;
         }
         
@@ -1056,20 +977,15 @@ public:
             std::lock_guard<std::mutex> lock(mutex);
             queue.push(encrypted);
             
-            // SECURITY VULNERABILITY: No length validation, allows messages of any size
             // could lead to memory exhaustion
             
-            // SECURITY VULNERABILITY: No access controls to check if sender is authorized
             
             // Log the message (with PII potentially exposed)
             std::cout << "Message queued from user: " << getCurrentUser() 
                       << ", length: " << message.length() << std::endl;
-            // SECURITY VULNERABILITY: Logs message length which could leak information
         }
         catch (const std::exception& e) {
-            // SECURITY VULNERABILITY: Generic exception handling
             std::cerr << "Error sending message: " << e.what() << std::endl;
-            // SECURITY VULNERABILITY: Error message could expose sensitive information
         }
     }
     
@@ -1087,17 +1003,12 @@ public:
         }
         catch (const std::exception& e) {
             std::cerr << "Error decrypting message: " << e.what() << std::endl;
-            // SECURITY VULNERABILITY: Returns empty string on error, can't distinguish 
             // between empty queue and decryption failure
             return "";
         }
     }
-    
-    // SECURITY VULNERABILITY: No authentication on message receive
-    // SECURITY VULNERABILITY: No message integrity verification
-    
+        
     std::string getCurrentUser() {
-        // SECURITY VULNERABILITY: No proper user context management
         return "user";
     }
     
@@ -1133,20 +1044,16 @@ std::string encrypt(const std::string& message) {
 
 namespace EncryptionUtils {
 
-// SECURITY VULNERABILITY: Function uses static buffer with fixed size
 // could cause buffer overflow for large messages
 std::string encrypt(const std::string& message, const unsigned char* key, size_t keyLen) {
     if (keyLen != 16 && keyLen != 24 && keyLen != 32) {
-        // SECURITY VULNERABILITY: Throws exception with details about key requirements
         throw std::invalid_argument("Key length must be 16, 24, or 32 bytes");
     }
     
     // Generate IV
     unsigned char iv[16];
-    // SECURITY VULNERABILITY: Not checking RAND_bytes return value
     RAND_bytes(iv, sizeof(iv));
     
-    // SECURITY VULNERABILITY: Using deprecated OpenSSL APIs
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) {
         throw std::runtime_error("Failed to create encryption context");
@@ -1161,7 +1068,6 @@ std::string encrypt(const std::string& message, const unsigned char* key, size_t
     // Initialize encryption
     if (EVP_EncryptInit_ex(ctx, cipher, NULL, key, iv) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        // SECURITY VULNERABILITY: Error reveals cryptographic details
         throw std::runtime_error("Failed to initialize encryption");
     }
     
@@ -1190,7 +1096,6 @@ std::string encrypt(const std::string& message, const unsigned char* key, size_t
     result.assign((char*)iv, sizeof(iv));
     result.append((char*)ciphertext.data(), cipherLen + finalLen);
     
-    // SECURITY VULNERABILITY: No authenticator or HMAC included with ciphertext
     // vulnerable to tampering and padding oracle attacks
     
     return result;
@@ -1198,7 +1103,6 @@ std::string encrypt(const std::string& message, const unsigned char* key, size_t
 
 std::string decrypt(const std::string& encryptedData, const unsigned char* key, size_t keyLen) {
     if (encryptedData.length() <= 16) {
-        // SECURITY VULNERABILITY: Error message reveals expected format
         throw std::invalid_argument("Encrypted data too short");
     }
     
@@ -1209,9 +1113,7 @@ std::string decrypt(const std::string& encryptedData, const unsigned char* key, 
     // Extract IV from first 16 bytes
     unsigned char iv[16];
     std::memcpy(iv, encryptedData.data(), 16);
-    
-    // SECURITY VULNERABILITY: No validation of IV
-    
+        
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) {
         throw std::runtime_error("Failed to create decryption context");
@@ -1238,7 +1140,6 @@ std::string decrypt(const std::string& encryptedData, const unsigned char* key, 
                        (const unsigned char*)encryptedData.data() + 16, 
                        encryptedData.length() - 16) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        // SECURITY VULNERABILITY: Revealing detailed OpenSSL error
         char errbuf[256];
         ERR_error_string_n(ERR_get_error(), errbuf, sizeof(errbuf));
         throw std::runtime_error(std::string("Failed to decrypt data: ") + errbuf);
@@ -1247,7 +1148,6 @@ std::string decrypt(const std::string& encryptedData, const unsigned char* key, 
     // Finalize decryption
     if (EVP_DecryptFinal_ex(ctx, plaintext.data() + plainLen, &finalLen) != 1) {
         EVP_CIPHER_CTX_free(ctx);
-        // SECURITY VULNERABILITY: Potential padding oracle - revealing if padding is invalid
         throw std::runtime_error("Failed to finalize decryption: Invalid padding");
     }
     
@@ -1330,7 +1230,6 @@ install_firmware(Firmware).
 -define(FIRMWARE_PATH, "/var/firmware/").
 -define(MAX_FIRMWARE_SIZE, 10485760). % 10 MB
 
-% SECURITY VULNERABILITY: Global timeout is too short for large firmware updates
 -define(TIMEOUT, 30000). % 30 seconds
 
 % Main update function
@@ -1338,7 +1237,6 @@ update_firmware(Firmware) ->
 % Get firmware size
 Size = byte_size(Firmware),
 
-% SECURITY VULNERABILITY: No rate limiting on update attempts
 
 if 
     % Check firmware size
@@ -1350,23 +1248,17 @@ if
             {error, Reason} ->
                 {error, Reason};
             {ok, Metadata} ->
-                % SECURITY VULNERABILITY: No validation of firmware version against device model
                 
                 % Verify signature
                 case verify_signature(Firmware, Metadata) of
                     true ->
-                        % SECURITY VULNERABILITY: No backup of current firmware before installing new one
                         Result = install_firmware(Firmware, Metadata),
                         
-                        % SECURITY VULNERABILITY: No check to ensure version is newer than current one
-                        
                         % Log update information to system log
-                        % SECURITY VULNERABILITY: Logs entire metadata which might contain sensitive information
                         log_update(Metadata, Result),
                         
                         Result;
                     false ->
-                        % SECURITY VULNERABILITY: Doesn't increment failed attempt counter
                         {error, invalid_signature}
                 end
         end
@@ -1379,10 +1271,8 @@ try
     <<Header:1024/binary, _Rest/binary>> = Firmware,
     
     % Parse header as JSON
-    % SECURITY VULNERABILITY: No validation of JSON structure or error handling for malformed JSON
     Metadata = jsx:decode(Header),
     
-    % SECURITY VULNERABILITY: No validation of required fields
     {ok, Metadata}
 catch
     error:_ ->
@@ -1396,22 +1286,18 @@ try
     Signature = proplists:get_value(<<"signature">>, Metadata),
     
     % Extract public key path from metadata
-    % SECURITY VULNERABILITY: Uses key path from metadata, which could be manipulated
     KeyPath = proplists:get_value(<<"key_path">>, Metadata),
     
     % Read public key
     {ok, PubKey} = file:read_file(KeyPath),
-    % SECURITY VULNERABILITY: No validation of key file existence or permissions
     
     % Extract firmware data without metadata header
     <<_Header:1024/binary, FirmwareData/binary>> = Firmware,
     
     % Verify signature
-    % SECURITY VULNERABILITY: Using fixed SHA1 algorithm instead of configurable/stronger hash
     crypto_utils:verify_signature(FirmwareData, Signature, PubKey)
 catch
     error:_ ->
-        % SECURITY VULNERABILITY: Returns false on any error instead of specific error codes
         false
 end.
 
@@ -1424,22 +1310,15 @@ try
     % Get firmware version
     Version = proplists:get_value(<<"version">>, Metadata),
     
-    % SECURITY VULNERABILITY: No validation of version format
-    
     % Create firmware file path
     FilePath = ?FIRMWARE_PATH ++ binary_to_list(Version) ++ ".bin",
-    
-    % SECURITY VULNERABILITY: Path traversal vulnerability - no sanitization of Version
-    
+        
     % Write firmware to file
     ok = file:write_file(FilePath, FirmwareData),
-    
-    % SECURITY VULNERABILITY: No validation of write success or permissions
-    
+        
     % Update current version pointer
     ok = file:write_file(?FIRMWARE_PATH ++ "current_version", Version),
     
-    % SECURITY VULNERABILITY: No atomic update - if system fails between firmware write and version update,
     % system could be in inconsistent state
     
     % Trigger firmware activation
@@ -1448,16 +1327,13 @@ try
     {ok, Version}
 catch
     error:Reason ->
-        % SECURITY VULNERABILITY: Returns generic error without cleanup of partial installation
         {error, Reason}
 end.
 
 % Activate firmware
 activate_firmware(FilePath) ->
-% SECURITY VULNERABILITY: Command injection vulnerability - FilePath is not escaped
 Command = "firmware-activate " ++ FilePath,
 os:cmd(Command).
-% SECURITY VULNERABILITY: No validation of command execution success
 
 % Log update information
 log_update(Metadata, Result) ->
@@ -1467,37 +1343,26 @@ LogMsg = io_lib:format("Firmware update: version=~s, result=~p",
 
 % Write to system log
 os:cmd("logger " ++ LogMsg).
-% SECURITY VULNERABILITY: Command injection in log message
 
 % Get current firmware version
 get_firmware_version() ->
-% SECURITY VULNERABILITY: No error handling if version file doesn't exist
 {ok, Version} = file:read_file(?FIRMWARE_PATH ++ "current_version"),
 Version.
 
 % Check for updates from server
 check_updates() ->
-% SECURITY VULNERABILITY: Hardcoded server URL
 Server = "http://firmware.example.com/updates",
-
-% SECURITY VULNERABILITY: No TLS for firmware update check
 
 % Get device ID
 DeviceId = get_device_id(),
 
 % Make request to server
 Url = Server ++ "?device=" ++ DeviceId,
-% SECURITY VULNERABILITY: No URL encoding of DeviceId
 
-% SECURITY VULNERABILITY: No timeout for HTTP request
 {ok, Response} = httpc:request(get, {Url, []}, [], []),
-
-% SECURITY VULNERABILITY: No validation of server certificate or response
 
 % Parse response
 {ok, UpdateInfo} = jsx:decode(Response),
-
-% SECURITY VULNERABILITY: No validation of response format
 
 % Check if update is available
 case proplists:get_value(<<"available">>, UpdateInfo) of
@@ -1509,24 +1374,19 @@ end.
 
 % Apply update from server
 apply_update(Version, Server) ->
-% SECURITY VULNERABILITY: No input validation on Version or Server
 
 % Build URL
 Url = Server ++ "/firmware/" ++ binary_to_list(Version),
 
 % Download firmware
-% SECURITY VULNERABILITY: No timeout for potentially large download
 {ok, Response} = httpc:request(get, {Url, []}, [], [{body_format, binary}]),
 {{_, 200, _}, _, Firmware} = Response,
-
-% SECURITY VULNERABILITY: No validation of HTTP status code or response size
 
 % Apply update
 update_firmware(Firmware).
 
 % Get device ID
 get_device_id() ->
-% SECURITY VULNERABILITY: Device ID derived from potentially predictable sources
 {ok, Hostname} = inet:gethostname(),
 Hostname.`
             },
@@ -1543,27 +1403,21 @@ true.
 -module(crypto_utils).
 -export([verify_signature/3, generate_signature/2, generate_keys/0, encrypt/2, decrypt/2]).
 
-% SECURITY VULNERABILITY: Hard-coded crypto parameters instead of configuration
 -define(HASH_ALGORITHM, sha).  % Should use sha256 or better
 -define(SIGNATURE_ALGORITHM, rsa).  % No algorithm strength specified
 
 % Verify signature
 verify_signature(Data, Signature, PublicKey) ->
 try
-    % SECURITY VULNERABILITY: Using deprecated crypto API
-    % SECURITY VULNERABILITY: Using weak hash algorithm (SHA-1)
     crypto:verify(?SIGNATURE_ALGORITHM, ?HASH_ALGORITHM, Data, Signature, PublicKey)
 catch
     error:_ ->
-        % SECURITY VULNERABILITY: Fails silently on crypto errors
         false
 end.
 
 % Generate signature
 generate_signature(Data, PrivateKey) ->
 try
-    % SECURITY VULNERABILITY: Using deprecated crypto API
-    % SECURITY VULNERABILITY: Using weak hash algorithm (SHA-1)
     crypto:sign(?SIGNATURE_ALGORITHM, ?HASH_ALGORITHM, Data, PrivateKey)
 catch
     error:Reason ->
@@ -1573,9 +1427,7 @@ end.
 % Generate key pair
 generate_keys() ->
 try
-    % SECURITY VULNERABILITY: Using fixed and inadequate RSA key size (1024 bits)
     crypto:generate_key(?SIGNATURE_ALGORITHM, [1024, 65537])
-    % SECURITY VULNERABILITY: Uses 65537 as public exponent without checking if appropriate
 catch
     error:Reason ->
         {error, Reason}
@@ -1587,15 +1439,12 @@ try
     % Generate random IV
     IV = crypto:strong_rand_bytes(16),
     
-    % SECURITY VULNERABILITY: Using ECB mode instead of GCM or CBC with HMAC
-    % SECURITY VULNERABILITY: No authentication tag included
     CipherText = crypto:block_encrypt(aes_ecb, Key, Data),
     
     % Return IV and ciphertext
     <<IV/binary, CipherText/binary>>
 catch
     error:Reason ->
-        % SECURITY VULNERABILITY: Reveals internal error details
         {error, Reason}
 end.
 
@@ -1604,31 +1453,24 @@ decrypt(EncryptedData, Key) ->
 try
     % Extract IV and ciphertext
     <<IV:16/binary, CipherText/binary>> = EncryptedData,
-    
-    % SECURITY VULNERABILITY: IV extracted but not used (ECB mode doesn't use IV)
-    % SECURITY VULNERABILITY: No checking of data length or structure
-    
+        
     % Decrypt data
     crypto:block_decrypt(aes_ecb, Key, CipherText)
 catch
     error:_ ->
-        % SECURITY VULNERABILITY: Generic error handling
         {error, decryption_failed}
 end.
 
-% SECURITY VULNERABILITY: No secure key storage or management functions
-% SECURITY VULNERABILITY: No key rotation mechanism
 
 % Helper function to convert hex string to binary
 hex_to_bin(HexStr) ->
-% SECURITY VULNERABILITY: No validation of hex string format
 {ok, list_to_binary([list_to_integer([X,Y], 16) || 
                      <<X:8, Y:8>> <= list_to_binary(HexStr)])}.
 
 % Helper function to convert binary to hex string
 bin_to_hex(Bin) ->
 lists:flatten([io_lib:format("~2.16.0b", [X]) || <<X:8>> <= Bin]).
-% SECURITY VULNERABILITY: Inefficient implementation for large binaries`
+`
             },
             {
                 name: "firmware_test.erl",
@@ -1643,7 +1485,6 @@ ok.
 -module(firmware_test).
 -include_lib("eunit/include/eunit.hrl").
 
-% SECURITY VULNERABILITY: Using live paths in test code
 -define(TEST_FIRMWARE_PATH, "/var/firmware/test/").
 
 % Test cases for update_firmware function
@@ -1666,7 +1507,6 @@ ok = filelib:ensure_dir(?TEST_FIRMWARE_PATH),
 % Generate test keys
 {PublicKey, PrivateKey} = crypto_utils:generate_keys(),
 
-% SECURITY VULNERABILITY: Writing keys to disk in tests
 ok = file:write_file(?TEST_FIRMWARE_PATH ++ "test_key.pub", PublicKey),
 ok = file:write_file(?TEST_FIRMWARE_PATH ++ "test_key.priv", PrivateKey),
 
@@ -1678,9 +1518,7 @@ ok = file:write_file(?TEST_FIRMWARE_PATH ++ "test_key.priv", PrivateKey),
 
 % Cleanup function
 cleanup(_Context) ->
-% SECURITY VULNERABILITY: Not securely wiping sensitive test keys from disk
 os:cmd("rm -rf " ++ ?TEST_FIRMWARE_PATH).
-% SECURITY VULNERABILITY: Command injection vulnerability in test cleanup
 
 % Test case for valid firmware
 test_valid_firmware() ->
@@ -1688,7 +1526,6 @@ test_valid_firmware() ->
 Metadata = #{
     <<"version">> => <<"1.0.0">>,
     <<"key_path">> => <<?TEST_FIRMWARE_PATH, "test_key.pub">>,
-    % SECURITY VULNERABILITY: Metadata includes key path instead of key ID
     <<"device_model">> => <<"test-device">>,
     <<"signature">> => <<>>  % Placeholder for signature
 },
@@ -1697,14 +1534,12 @@ Metadata = #{
 MetadataJson = jsx:encode(Metadata),
 
 % Pad metadata to 1024 bytes
-% SECURITY VULNERABILITY: Fixed size metadata block without validation
 PaddedMetadata = pad_to_size(MetadataJson, 1024),
 
 % Create firmware data
 FirmwareData = <<"TEST_FIRMWARE_DATA">>,
 
 % Calculate signature
-% SECURITY VULNERABILITY: Tests don't validate signature algorithm strength
 {ok, Context} = setup(),
 PrivateKey = maps:get(private_key, Context),
 Signature = crypto_utils:generate_signature(FirmwareData, PrivateKey),
@@ -1717,7 +1552,6 @@ PaddedUpdatedMetadata = pad_to_size(UpdatedMetadata, 1024),
 Firmware = <<PaddedUpdatedMetadata/binary, FirmwareData/binary>>,
 
 % Test firmware update
-% SECURITY VULNERABILITY: Test doesn't verify actual installation, only return value
 ?assertEqual({ok, <<"1.0.0">>}, firmware_updater:update_firmware(Firmware)),
 
 cleanup(Context).
@@ -1725,18 +1559,15 @@ cleanup(Context).
 % Test case for oversized firmware
 test_oversized_firmware() ->
 % Create an oversized firmware
-% SECURITY VULNERABILITY: Test doesn't actually test the size limit correctly
 OversizedData = crypto:strong_rand_bytes(11 * 1024 * 1024),
 ?assertEqual({error, firmware_too_large}, firmware_updater:update_firmware(OversizedData)).
 
 % Test case for invalid signature
 test_invalid_signature() ->
-% SECURITY VULNERABILITY: Test doesn't actually validate signature verification
 ?assertEqual({error, invalid_signature}, firmware_updater:update_firmware(<<"INVALID">>)).
 
 % Test case for invalid metadata
 test_invalid_metadata() ->
-% SECURITY VULNERABILITY: Test doesn't fully validate metadata parsing
 ?assertEqual({error, invalid_metadata}, firmware_updater:update_firmware(<<"NOT_JSON">>)).
 
 % Helper function to pad binary to specific size

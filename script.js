@@ -1,8 +1,8 @@
-import mockCommits  from '../mock_data/mock_commits.js';
+import mockCommits from '../mock_data/mock_commits.js';
 import mockComments from './mock_data/mock_comments.js';
 
-import mockPatchSets  from '../mock_data/mock_patch_sets.js';
-import mockTestRuns  from '../mock_data/mock_test_runs.js';
+import mockPatchSets from '../mock_data/mock_patch_sets.js';
+import mockTestRuns from '../mock_data/mock_test_runs.js';
 import mockTroubleshootingReports from '../mock_data/mock_troubleshooting_reports.js';
 import mockMergedCommits from '../mock_data/mock_merged_commits.js';
 import { predictCommitRisk, generateRecommendations } from '../commit-risk-predictor.js';
@@ -99,113 +99,99 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function loadCommit(index) {
-        // Show loading, hide results
+        // Show loading indicator, but don't hide results yet if they exist
         document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('results').classList.add('hidden');
-        document.getElementById('trSection').classList.add('hidden');
-        document.getElementById('repoActivitySection').classList.add('hidden');
-
+        
         try {
             const commitData = mockCommits[index];
-
-            // Call the ML model for risk prediction
-            const prediction = await predictCommitRisk(commitData);
-
-            // Update the sample commit with the ML prediction
-            const enhancedCommit = {
-                ...commitData,
-                risk_score: prediction.risk_score,
-                risk_level: prediction.risk_level,
-                // Generate recommendations based on ML prediction
-                recommendations: generateRecommendations(prediction, commitData)
-            };
-
-            // Display results with the enhanced commit data
-            displayResults(enhancedCommit);
-
-            // Add UI indicator if we used fallback prediction
-            if (prediction.is_fallback) {
-                showFallbackWarning();
-            }
-        } catch (error) {
-            console.error("Error loading commit:", error);
-            alert("Error analyzing commit: " + error.message);
-
-            // Fallback to original data without ML
-            displayResults(mockCommits[index]);
-        } finally {
-            document.getElementById('loading').classList.add('hidden');
+            
+            // First, display basic commit data immediately
+            displayBasicCommitInfo(commitData);
+            
+            // Then, start the ML prediction in the background
+            const predictionPromise = predictCommitRisk(commitData).then(prediction => {
+                // Update the UI with prediction results when they arrive
+                updateWithPredictionResults(commitData, prediction);
+                
+                // Add UI indicator if we used fallback prediction
+                if (prediction.is_fallback) {
+                    showFallbackWarning();
+                }
+            }).catch(error => {
+                console.error("Error with prediction:", error);
+                // Still show something if prediction fails
+                updateWithFallbackResults(commitData);
+            });
+            
+            // Load other UI sections immediately without waiting for prediction
+            displayTrForRepo(commitData.repo);
+            displayMergedCommits(commitData.repo);
+            setupMergeStatusTabs();
+            
+            // Show the results and side sections immediately
             document.getElementById('results').classList.remove('hidden');
             document.getElementById('trSection').classList.remove('hidden');
             document.getElementById('repoActivitySection').classList.remove('hidden');
+            
+            // Hide loading indicator after basic data is shown
+            document.getElementById('loading').classList.add('hidden');
+            
+        } catch (error) {
+            console.error("Error loading commit:", error);
+            alert("Error analyzing commit: " + error.message);
+            document.getElementById('loading').classList.add('hidden');
         }
     }
+    
 
     async function analyzeCommitByHash(hash) {
-        // Show loading, hide results
+        // Show loading, but don't hide results yet if they exist
         document.getElementById('loading').classList.remove('hidden');
-        document.getElementById('results').classList.add('hidden');
-        document.getElementById('trSection').classList.add('hidden');
-        document.getElementById('repoActivitySection').classList.add('hidden');
-
+        
         try {
             // Check if hash matches one of our sample commits
             const matchedCommit = mockCommits.find(commit => commit.hash === hash);
-
+            
             if (matchedCommit) {
-                // If we have this commit in our samples, use it with ML prediction
-                const prediction = await predictCommitRisk(matchedCommit);
-
-                // Create enhanced commit with ML predictions
-                const enhancedCommit = {
-                    ...matchedCommit,
-                    risk_score: prediction.risk_score,
-                    risk_level: prediction.risk_level,
-                    recommendations: generateRecommendations(prediction, matchedCommit)
-                };
-
-                displayResults(enhancedCommit);
-
-                // Add UI indicator if we used fallback prediction
-                if (prediction.is_fallback) {
-                    showFallbackWarning();
-                }
+                // First, display basic commit data immediately
+                displayBasicCommitInfo(matchedCommit);
+                
+                // Show the results and side sections immediately
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('trSection').classList.remove('hidden');
+                document.getElementById('repoActivitySection').classList.remove('hidden');
+                
+                // Load other UI sections immediately
+                displayTrForRepo(matchedCommit.repo);
+                displayMergedCommits(matchedCommit.repo);
+                setupMergeStatusTabs();
+                
+                // Start prediction in the background
+                const predictionPromise = predictCommitRisk(matchedCommit).then(prediction => {
+                    // Update the UI with prediction results when they arrive
+                    updateWithPredictionResults(matchedCommit, prediction);
+                    
+                    // Add UI indicator if we used fallback prediction
+                    if (prediction.is_fallback) {
+                        showFallbackWarning();
+                    }
+                }).catch(error => {
+                    console.error("Error with prediction:", error);
+                    // Still show something if prediction fails
+                    updateWithFallbackResults(matchedCommit);
+                });
+                
+                // Hide loading indicator after basic data is shown
+                document.getElementById('loading').classList.add('hidden');
             } else {
-                // In a real implementation, this would fetch from a git repository
-
-                // Use ML prediction for this random commit
-                const prediction = await predictCommitRisk(randomCommit);
-
-                // Create enhanced commit with ML predictions
-                const enhancedCommit = {
-                    ...randomCommit,
-                    risk_score: prediction.risk_score,
-                    risk_level: prediction.risk_level,
-                    recommendations: generateRecommendations(prediction, randomCommit)
-                };
-
-                displayResults(enhancedCommit);
-
-                // Add UI indicator if we used fallback prediction
-                if (prediction.is_fallback) {
-                    showFallbackWarning();
-                }
+                // Handle case for commit hash not in our samples
+                alert("Commit hash not found in sample data");
+                document.getElementById('loading').classList.add('hidden');
             }
         } catch (error) {
             console.error("Error analyzing commit:", error);
             alert("Error analyzing commit: " + error.message);
-
-            // If we have a matched commit, use that as fallback
-            const matchedCommit = mockCommits.find(commit => commit.hash === hash);
-            if (matchedCommit) {
-                displayResults(matchedCommit);
-            }
-            
-        } finally {
             document.getElementById('loading').classList.add('hidden');
-            document.getElementById('results').classList.remove('hidden');
-            document.getElementById('trSection').classList.remove('hidden');
-            document.getElementById('repoActivitySection').classList.remove('hidden');
         }
     }
 
@@ -241,16 +227,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function displayCodePreview(code, fileType) {
         const codePreview = document.getElementById('codePreview');
-    
+
         // Clear previous content
         codePreview.innerHTML = '';
         codePreview.className = 'code-preview';
         codePreview.classList.add(`file-${fileType}`);
-    
+
         // Create fresh elements
         const pre = document.createElement('pre');
         const codeElement = document.createElement('code');
-    
+
         // Set the appropriate class for the language
         if (fileType === 'h' || fileType === 'cpp') {
             codeElement.className = 'language-cpp';
@@ -265,14 +251,14 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             codeElement.className = 'language-clike';
         }
-    
+
         // Set the code content as text (not HTML)
         codeElement.textContent = code;
-    
+
         // Append elements
         pre.appendChild(codeElement);
         codePreview.appendChild(pre);
-    
+
         // If Prism is available, highlight the code
         if (window.Prism) {
             try {
@@ -375,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('filesChanged').textContent = commit.files_changed || 0;
         document.getElementById('insertions').textContent = "+" + (commit.lines_added || commit.insertions || 0);
         document.getElementById('deletions').textContent = "-" + (commit.lines_deleted || commit.deletions || 0);
-        document.getElementById('totalChanges').textContent = (commit.total_changes || 
+        document.getElementById('totalChanges').textContent = (commit.total_changes ||
             ((commit.lines_added || 0) + (commit.lines_deleted || 0)) || 0);
 
         const commitPatchsets = mockPatchSets[commit.hash] || [];
@@ -383,16 +369,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (document.getElementById('reviewersCount')) {
             const comments = mockComments[commit.hash] || [];
-            
+
             // Use a Set to get unique reviewers, excluding the commit author
             const uniqueReviewers = new Set();
-            
+
             comments.forEach(comment => {
                 // Only add if the comment author is different from the commit author
                 if (comment.author !== commit.author) {
                     uniqueReviewers.add(comment.author);
                 }
-                
+
                 // Add replies' authors, excluding the commit author
                 if (comment.replies) {
                     comment.replies.forEach(reply => {
@@ -402,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
             });
-        
+
             document.getElementById('reviewersCount').textContent = uniqueReviewers.size;
         }
 
@@ -419,11 +405,17 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Update recommendations
         const recommendationList = document.getElementById('recommendationList');
         recommendationList.innerHTML = '';
 
-        if (commit.recommendations && commit.recommendations.length > 0) {
+        if (commit.renderedMarkdown) {
+            // Use the rendered HTML directly
+            const recommendationsContainer = document.createElement('div');
+            recommendationsContainer.className = 'markdown-content';
+            recommendationsContainer.innerHTML = commit.renderedMarkdown;
+            recommendationList.appendChild(recommendationsContainer);
+        } else if (commit.recommendations && commit.recommendations.length > 0) {
+            // Fallback to the old method if renderedMarkdown is not available
             commit.recommendations.forEach(function (rec) {
                 const li = document.createElement('li');
                 li.textContent = rec;
@@ -451,16 +443,16 @@ document.addEventListener('DOMContentLoaded', function () {
             // Count all comments
             let totalCommentCount = 0;
             const comments = mockComments[commit.hash] || [];
-        
+
             comments.forEach(comment => {
                 totalCommentCount++; // Count the main comment
-                
+
                 // Add the number of replies
                 if (comment.replies && comment.replies.length > 0) {
                     totalCommentCount += comment.replies.length;
                 }
             });
-        
+
             document.getElementById('unresolvedComments').textContent = totalCommentCount;
         }
 
@@ -568,52 +560,52 @@ document.addEventListener('DOMContentLoaded', function () {
         const patchsetsList = document.getElementById('patchsetsList');
         const patchsetTimeline = document.getElementById('patchsetTimeline');
         const patchsetTotalCount = document.getElementById('patchsetTotalCount');
-    
+
         if (!patchsetsList || !patchsetTimeline || !patchsetTotalCount) return;
-    
+
         // Clear previous patchsets
         patchsetsList.innerHTML = '';
         patchsetTimeline.innerHTML = '';
-    
+
         // Find the commit to get the number of patchsets
         const commitData = mockCommits.find(commit => commit.hash === commitHash);
-        
+
         // Update total count directly from commit data
         const totalPatchsets = commitData ? commitData.num_patchsets : patchsets.length;
         patchsetTotalCount.textContent = totalPatchsets;
-    
+
         // If no patchsets, show a message
         if (patchsets.length === 0) {
             patchsetsList.innerHTML = '<div class="no-patchsets-message">No patchsets available for this commit</div>';
             return;
         }
-    
+
         // Create timeline markers
         patchsets.forEach((patchset, index) => {
             const percentage = (index / (patchsets.length - 1)) * 100;
             const marker = document.createElement('div');
             marker.className = `patchset-marker ${patchset.isCurrent ? 'current' : ''}`;
             marker.style.left = `${percentage}%`;
-    
+
             // Format date for tooltip
             const patchsetDate = new Date(patchset.date);
             const formattedDate = patchsetDate.toLocaleDateString() + ' ' +
                 patchsetDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             marker.setAttribute('data-date', formattedDate);
-    
+
             patchsetTimeline.appendChild(marker);
         });
-    
+
         // Create patchset items
         patchsets.forEach(patchset => {
             const patchsetItem = document.createElement('div');
             patchsetItem.className = `patchset-item ${patchset.isCurrent ? 'current' : ''}`;
-    
+
             // Format the date
             const patchsetDate = new Date(patchset.date);
             const formattedDate = patchsetDate.toLocaleDateString() + ' ' +
                 patchsetDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
             patchsetItem.innerHTML = `
                 <div class="patchset-info">
                     <div class="patchset-id">
@@ -625,7 +617,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div class="patchset-date">${formattedDate}</div>
             `;
-    
+
             patchsetsList.appendChild(patchsetItem);
         });
     }
@@ -996,7 +988,7 @@ function setupMergeStatusTabs() {
             let targetPane;
             if (tabId === 'merged') {
                 targetPane = document.getElementById('mergedCommitsPane');
-            } 
+            }
             if (targetPane) {
                 targetPane.classList.add('active');
             }
@@ -1124,4 +1116,263 @@ function createCommentElement(comment) {
     }
 
     return commentElement;
+}
+
+function displayBasicCommitInfo(commit) {
+    // Display basic commit info
+    document.getElementById('repoName').textContent = `Repository: ${commit.repo || 'Unknown'}`;
+    document.getElementById('commitHash').textContent = `Commit: ${commit.hash}`;
+    document.getElementById('commitMessage').textContent = commit.message;
+    document.getElementById('commitAuthor').textContent = `Author: ${commit.author}`;
+    document.getElementById('commitDate').textContent = `Date: ${commit.date}`;
+    
+    // Display files list
+    const filesList = document.getElementById('filesList');
+    if (filesList) {
+        filesList.innerHTML = '';
+        
+        if (commit.files && commit.files.length > 0) {
+            commit.files.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = `file-item file-${file.type}`;
+                if (index === 0) fileItem.classList.add('active');
+                
+                fileItem.setAttribute('data-code', file.code);
+                fileItem.setAttribute('data-type', file.type);
+                
+                const fileName = document.createElement('div');
+                fileName.className = 'file-name';
+                fileName.textContent = file.name;
+                
+                const fileChanges = document.createElement('div');
+                fileChanges.className = 'file-changes';
+                fileChanges.innerHTML = `<span class="added-lines">${file.changes.split(',')[0]}</span>, <span class="deleted-lines">${file.changes.split(',')[1]}</span>`;
+                
+                fileItem.appendChild(fileName);
+                fileItem.appendChild(fileChanges);
+                filesList.appendChild(fileItem);
+            });
+            
+            // Display the first file by default
+            if (commit.files[0]) {
+                displayCodePreview(commit.files[0].code, commit.files[0].type);
+            }
+        } else {
+            // Fallback for old data format
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item active';
+            fileItem.setAttribute('data-code', commit.code);
+            fileItem.setAttribute('data-type', 'cpp');
+            
+            const fileName = document.createElement('div');
+            fileName.className = 'file-name';
+            fileName.textContent = 'Code Sample';
+            
+            const fileChanges = document.createElement('div');
+            fileChanges.className = 'file-changes';
+            fileChanges.textContent = `+${commit.insertions}, -${commit.deletions}`;
+            
+            fileItem.appendChild(fileName);
+            fileItem.appendChild(fileChanges);
+            filesList.appendChild(fileItem);
+            
+            displayCodePreview(commit.code, 'cpp');
+        }
+    }
+    
+    // Update stats with basic information
+    document.getElementById('filesChanged').textContent = commit.files_changed || 0;
+    document.getElementById('insertions').textContent = "+" + (commit.lines_added || commit.insertions || 0);
+    document.getElementById('deletions').textContent = "-" + (commit.lines_deleted || commit.deletions || 0);
+    document.getElementById('totalChanges').textContent = (commit.total_changes ||
+        ((commit.lines_added || 0) + (commit.lines_deleted || 0)) || 0);
+    
+    // Set a default "Loading..." state for risk score
+    document.getElementById('riskScore').textContent = "...";
+    document.getElementById('riskLabel').textContent = "Analyzing";
+    document.getElementById('riskLabel').className = "risk-label";
+    
+    // Display other data that's immediately available
+    displayCommentsForCommit(commit.hash);
+    displayCiCdTests(commit.hash);
+    displayPatchsets(commit.hash);
+    
+    // Set a "Loading recommendations..." message
+    const recommendationList = document.getElementById('recommendationList');
+    recommendationList.innerHTML = '<li>Analyzing commit to generate recommendations...</li>';
+}
+
+// New function to update UI with prediction results when they arrive
+function updateWithPredictionResults(commit, prediction) {
+    // Update risk data
+    document.getElementById('riskScore').textContent = prediction.risk_score.toFixed(1);
+    
+    // Update risk label with appropriate class
+    const riskLevel = prediction.risk_level;
+    const riskLabel = document.getElementById('riskLabel');
+    riskLabel.textContent = `${riskLevel} Risk`;
+    riskLabel.className = `risk-label risk-${riskLevel.toLowerCase()}`;
+    
+    // Update code preview border based on risk level
+    const codePreview = document.getElementById('codePreview');
+    if (codePreview) {
+        // Remove any existing risk classes
+        codePreview.classList.remove('low-risk', 'medium-risk', 'high-risk');
+        
+        // Add the appropriate risk class
+        codePreview.classList.add(`${riskLevel.toLowerCase()}-risk`);
+    }
+    
+    // Update recommendations
+    const recommendationList = document.getElementById('recommendationList');
+    recommendationList.innerHTML = '';
+    
+    if (prediction.renderedMarkdown) {
+        // Use the rendered HTML directly
+        const recommendationsContainer = document.createElement('div');
+        recommendationsContainer.className = 'markdown-content';
+        recommendationsContainer.innerHTML = prediction.renderedMarkdown;
+        recommendationList.appendChild(recommendationsContainer);
+    } else if (prediction.suggestions && prediction.suggestions.length > 0) {
+        // Fallback to the old method if renderedMarkdown is not available
+        prediction.suggestions.forEach(function (rec) {
+            const li = document.createElement('li');
+            li.textContent = rec;
+            recommendationList.appendChild(li);
+        });
+    } else if (prediction.recommendations && prediction.recommendations.length > 0) {
+        prediction.recommendations.forEach(function (rec) {
+            const li = document.createElement('li');
+            li.textContent = rec;
+            recommendationList.appendChild(li);
+        });
+    } else {
+        const li = document.createElement('li');
+        li.textContent = 'No recommendations needed.';
+        recommendationList.appendChild(li);
+    }
+}
+
+// Fallback function if prediction fails
+function updateWithFallbackResults(commit) {
+    // Set default risk level based on basic metrics
+    let riskScore = 35; // Default low risk
+    let riskLevel = "Low";
+    
+    // Simple heuristic: large commits are higher risk
+    const linesChanged = (commit.lines_added || commit.insertions || 0) + 
+                         (commit.lines_deleted || commit.deletions || 0);
+    
+    if (linesChanged > 500) {
+        riskScore = 75;
+        riskLevel = "High";
+    } else if (linesChanged > 200) {
+        riskScore = 55;
+        riskLevel = "Medium";
+    }
+    
+    // Update UI with fallback values
+    document.getElementById('riskScore').textContent = riskScore.toFixed(1);
+    
+    const riskLabel = document.getElementById('riskLabel');
+    riskLabel.textContent = `${riskLevel} Risk (Est.)`;
+    riskLabel.className = `risk-label risk-${riskLevel.toLowerCase()}`;
+    
+    // Update code preview border
+    const codePreview = document.getElementById('codePreview');
+    if (codePreview) {
+        codePreview.classList.remove('low-risk', 'medium-risk', 'high-risk');
+        codePreview.classList.add(`${riskLevel.toLowerCase()}-risk`);
+    }
+    
+    // Add basic recommendations
+    const recommendationList = document.getElementById('recommendationList');
+    recommendationList.innerHTML = '';
+    
+    const basicRecommendations = generateBasicRecommendations(commit, riskLevel);
+    basicRecommendations.forEach(function (rec) {
+        const li = document.createElement('li');
+        li.textContent = rec;
+        recommendationList.appendChild(li);
+    });
+    
+    // Show warning that we're using estimated values
+    showFallbackWarning();
+}
+
+// Generate basic recommendations without ML model
+function generateBasicRecommendations(commit, riskLevel) {
+    const recommendations = [];
+    const filesChanged = commit.files_changed || commit.files?.length || 0;
+    const linesAdded = commit.lines_added || commit.insertions || 0;
+    const linesDeleted = commit.lines_deleted || commit.deletions || 0;
+    
+    if (riskLevel === "High") {
+        recommendations.push("Consider breaking this large commit into smaller, focused changes");
+        recommendations.push("Request thorough code review from senior team members");
+        recommendations.push("Ensure comprehensive test coverage for all changes");
+    } else if (riskLevel === "Medium") {
+        recommendations.push("Ensure adequate test coverage for all changes");
+        recommendations.push("Request detailed code review");
+    }
+    
+    if (filesChanged > 5) {
+        recommendations.push(`This commit modifies ${filesChanged} files, which increases integration risk`);
+    }
+    
+    if (linesDeleted > linesAdded * 1.5) {
+        recommendations.push("This commit removes significantly more code than it adds, ensure functionality is preserved");
+    }
+    
+    if (linesAdded > linesDeleted * 3) {
+        recommendations.push("Large amount of new code added. Consider thorough testing");
+    }
+    
+    return recommendations;
+}
+
+function displayCodePreview(code, fileType) {
+    const codePreview = document.getElementById('codePreview');
+
+    // Clear previous content
+    codePreview.innerHTML = '';
+    codePreview.className = 'code-preview';
+    codePreview.classList.add(`file-${fileType}`);
+
+    // Create fresh elements
+    const pre = document.createElement('pre');
+    const codeElement = document.createElement('code');
+
+    // Set the appropriate class for the language
+    if (fileType === 'h' || fileType === 'cpp') {
+        codeElement.className = 'language-cpp';
+    } else if (fileType === 'c') {
+        codeElement.className = 'language-c';
+    } else if (fileType === 'erl') {
+        codeElement.className = 'language-erlang';
+    } else if (fileType === 'java') {
+        codeElement.className = 'language-java';
+    } else if (fileType === 'py') {
+        codeElement.className = 'language-python';
+    } else {
+        codeElement.className = 'language-clike';
+    }
+
+    // Set the code content as text (not HTML)
+    codeElement.textContent = code;
+
+    // Append elements
+    pre.appendChild(codeElement);
+    codePreview.appendChild(pre);
+
+    // If Prism is available, highlight the code
+    if (window.Prism) {
+        try {
+            Prism.highlightElement(codeElement);
+        } catch (error) {
+            console.error('Error highlighting code:', error);
+        }
+    } else {
+        console.warn('Prism is not available for syntax highlighting');
+    }
 }

@@ -5,54 +5,89 @@
  * @param {Object} commitData - The commit data to analyze
  * @returns {Promise<Object>} - Promise resolving to risk prediction results
  */
+// In commit-risk-predictor.js, modify the predictCommitRisk function:
+
+// Modified commit-risk-predictor.js
+
+/**
+ * Predicts commit risk using Azure ML model with improved async handling
+ * @param {Object} commitData - The commit data to analyze
+ * @returns {Promise<Object>} - Promise resolving to risk prediction results
+ */
 async function predictCommitRisk(commitData) {
     try {
-        // Transform commit data into the format expected by the model
-        const modelInput = transformCommitData(commitData);
+        // Create promises for both API calls
+        const mlPromise = callAzureMLEndpoint(transformCommitData(commitData))
+            .catch(error => {
+                console.warn("ML prediction failed, using fallback calculation:", error);
+                return null; // Return null to indicate we should use fallback
+            });
         
-        // Call Azure ML endpoint via proxy
-        const response = await callAzureMLEndpoint(modelInput);
+        const suggestionsPromise = fetch(`/api/suggestions/${commitData.hash}`)
+            .then(response => response.json())
+            .catch(error => {
+                console.warn("Suggestions API failed:", error);
+                return { suggestions: [] }; // Return empty suggestions on failure
+            });
         
-        console.log("Azure ML response:", response);
+        // Wait for both promises to resolve (either successfully or with fallback)
+        const [mlResponse, suggestionsData] = await Promise.allSettled([
+            mlPromise,
+            suggestionsPromise
+        ]);
         
-        // Handle array response format (what your model is returning)
-        if (Array.isArray(response)) {
-            const score = parseFloat(response[0]);
-            let level = "Low";
-            if (score >= 70) level = "High";
-            else if (score >= 40) level = "Medium";
+        // Process ML response (if available)
+        let riskScore = 0;
+        let riskLevel = "Low";
+        let isFallback = false;
+        
+        // Check if ML prediction succeeded
+        if (mlResponse.status === 'fulfilled' && mlResponse.value) {
+            const result = mlResponse.value;
+            if (Array.isArray(result)) {
+                riskScore = parseFloat(result[0]);
+            } else if (typeof result === 'number') {
+                riskScore = result;
+            }
             
-            return {
-                risk_score: score,
-                risk_level: level,
-                original_data: commitData
-            };
-        }
-        // Handle object response formats
-        else if (response.risk_score && Array.isArray(response.risk_score)) {
-            return {
-                risk_score: parseFloat(response.risk_score[0]),
-                risk_level: response.risk_level ? response.risk_level[0] : determineRiskLevel(parseFloat(response.risk_score[0])),
-                original_data: commitData
-            };
-        }         else if (response.prediction && Array.isArray(response.prediction)) {
-            const score = parseFloat(response.prediction[0]);
-            let level = "Low";
-            if (score >= 70) level = "High";
-            else if (score >= 40) level = "Medium";
-            
-            return {
-                risk_score: score,
-                risk_level: level,
-                original_data: commitData
-            };
+            // Determine risk level
+            if (riskScore >= 70) riskLevel = "High";
+            else if (riskScore >= 40) riskLevel = "Medium";
         } else {
-            console.log("Unrecognized response format, using fallback:", response);
-            return calculateFallbackRiskScore(commitData);
+            // Use fallback calculation if ML prediction failed
+            const fallback = calculateFallbackRiskScore(commitData);
+            riskScore = fallback.risk_score;
+            riskLevel = fallback.risk_level;
+            isFallback = true;
         }
+        
+        // Process suggestions (if available)
+        let suggestions = [];
+        let renderedMarkdown = null;
+        let markdown = null;
+        
+        if (suggestionsData.status === 'fulfilled') {
+            suggestions = suggestionsData.value.suggestions || [];
+            renderedMarkdown = suggestionsData.value.renderedMarkdown;
+            markdown = suggestionsData.value.markdown;
+        } else {
+            // Generate basic recommendations if API failed
+            suggestions = generateRecommendations({ risk_level: riskLevel }, commitData);
+        }
+        
+        // Return combined results
+        return {
+            risk_score: riskScore,
+            risk_level: riskLevel,
+            suggestions: suggestions,
+            renderedMarkdown: renderedMarkdown,
+            markdown: markdown,
+            original_data: commitData,
+            is_fallback: isFallback
+        };
     } catch (error) {
-        console.error("Error predicting commit risk:", error);
-        // Fallback to basic risk calculation in case of API failure
+        console.error("Error in predictCommitRisk:", error);
+        // If everything fails, return a safe fallback
         return calculateFallbackRiskScore(commitData);
     }
 }
@@ -142,38 +177,43 @@ function transformCommitData(commitData) {
     };
 }
 
+
 /**
- * Calls Azure ML endpoint with commit data
+ * Calls Azure ML endpoint with commit data and improved timeout handling
  * @param {Object} modelInput - Data formatted for the ML model
  * @returns {Promise<Object>} - Promise resolving to model prediction
  */
 async function callAzureMLEndpoint(modelInput) {
+    // Create a promise with a timeout
+    const fetchPromise = fetch('/api/azure-ml-proxy', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            data: modelInput
+        })
+    });
+    
+    // Add a timeout of 5 seconds for the API call
+    const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('ML API timeout')), 5000);
+    });
+    
     try {
-        console.log("Sending ML Model Input:", JSON.stringify(modelInput, null, 2));
+        // Race the fetch against the timeout
+        const response = await Promise.race([fetchPromise, timeoutPromise]);
         
-        const response = await fetch('/api/azure-ml-proxy', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                data: modelInput  // Only send the model input
-            })
-        });
-        
-        // Log the raw response
+        // Parse the response
         const responseText = await response.text();
-        console.log("Raw Response:", responseText);
         
         if (!response.ok) {
-            console.error("Response not OK:", response.status, responseText);
             throw new Error(`Proxy API returned status ${response.status}`);
         }
         
-        const result = JSON.parse(responseText);
-        return result;
+        return JSON.parse(responseText);
     } catch (error) {
-        console.error("Complete Azure ML Endpoint Error:", error);
+        console.error("Azure ML Endpoint Error:", error);
         throw error;
     }
 }
@@ -190,9 +230,9 @@ function calculateFallbackRiskScore(commitData) {
     // Get commit data with defaults
     const authorExperience = commitData.author_experience || 1; // Default to junior
     const repo = commitData.repo || "unknown";
-    const linesAdded = commitData.insertions || 0;
-    const linesDeleted = commitData.deletions || 0;
-    const filesChanged = commitData.files_changed || 0;
+    const linesAdded = commitData.lines_added || commitData.insertions || 0;
+    const linesDeleted = commitData.lines_deleted || commitData.deletions || 0;
+    const filesChanged = commitData.files_changed || commitData.files?.length || 0;
     const unresolvedComments = commitData.unresolved_comments || 0;
     const numReviewers = commitData.reviewers_count || 1;
     const programmingLanguage = commitData.programming_language || "Unknown";
@@ -296,14 +336,15 @@ function calculateFallbackRiskScore(commitData) {
     };
 }
 
+
 /**
  * Gets past TR count for a repository
  * @param {string} repo - Repository name
  * @returns {number} - Count of past TRs
  */
+// Helper functions for TRs
 function getPastTRsCount(repo) {
     try {
-        // Check if we have TR data for this repo
         if (window.troubleshootingReports && window.troubleshootingReports[repo]) {
             return window.troubleshootingReports[repo].length;
         }
@@ -321,7 +362,6 @@ function getPastTRsCount(repo) {
  */
 function getActiveTRsCount(repo) {
     try {
-        // Check if we have TR data for this repo
         if (window.troubleshootingReports && window.troubleshootingReports[repo]) {
             return window.troubleshootingReports[repo]
                 .filter(tr => tr.status !== "Resolved")
@@ -341,7 +381,6 @@ function getActiveTRsCount(repo) {
  */
 function getCriticalTRsCount(repo) {
     try {
-        // Check if we have TR data for this repo
         if (window.troubleshootingReports && window.troubleshootingReports[repo]) {
             return window.troubleshootingReports[repo]
                 .filter(tr => tr.priority === "Critical")
@@ -364,8 +403,8 @@ function generateRecommendations(prediction, commitData) {
     const recommendations = [];
     const riskLevel = prediction.risk_level;
     const filesChanged = commitData.files_changed || 0;
-    const insertions = commitData.insertions || 0;
-    const deletions = commitData.deletions || 0;
+    const insertions = commitData.insertions || commitData.lines_added || 0;
+    const deletions = commitData.deletions || commitData.lines_deleted || 0;
     const unresolvedComments = commitData.unresolved_comments || 0;
     
     // Base recommendations by risk level

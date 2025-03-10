@@ -20,7 +20,7 @@ const mockPatchSets = {
             id: "3",
             author: "Grace Lee <grace@example.com>",
             date: "2025-04-07T16:30:00Z",
-            changes: "+120, -40",
+            changes: "+78, -42",
             description: "Optimized compression algorithm and added WebP support",
             isCurrent: true
         }
@@ -62,7 +62,7 @@ const mockPatchSets = {
             id: "5",
             author: "Henry Brown <henry@example.com>",
             date: "2025-04-11T13:42:00Z",
-            changes: "+220, -60",
+            changes: "+95, -125",
             description: "Final security review fixes and performance optimizations",
             isCurrent: true
         }
@@ -128,7 +128,7 @@ const mockPatchSets = {
             id: "8",
             author: "Ivy Chen <ivy@example.com>",
             date: "2025-04-15T16:50:00Z",
-            changes: "+180, -50",
+            changes: "+102, -78",
             description: "Final security review fixes and documentation updates",
             isCurrent: true
         }
@@ -162,7 +162,7 @@ const mockPatchSets = {
             id: "4",
             author: "Jack Wilson <jack@example.com>",
             date: "2025-04-12T15:30:00Z",
-            changes: "+150, -60",
+            changes: "+85, -65",
             description: "Added support for complex nested parameters and sanitization",
             isCurrent: true
         }
@@ -212,7 +212,7 @@ const mockPatchSets = {
             id: "6",
             author: "Karen Davis <karen@example.com>",
             date: "2025-04-15T10:45:00Z",
-            changes: "+180, -80",
+            changes: "+110, -70",
             description: "Final security hardening and performance optimizations",
             isCurrent: true
         }
@@ -294,7 +294,7 @@ const mockPatchSets = {
             id: "10",
             author: "Liam Johnson <liam@example.com>",
             date: "2025-04-20T10:30:00Z",
-            changes: "+200, -180",
+            changes: "+135, -65",
             description: "Final security review fixes and documentation updates",
             isCurrent: true
         }
